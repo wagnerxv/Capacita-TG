@@ -159,6 +159,8 @@ class DashboardController {
                 document.getElementById('editExperiencia').value = student.experiencia || '';
                 document.getElementById('editFormacao').value = student.formacao || '';
             }
+        } catch (error) {
+            console.error('Erro ao abrir modal de edição:', error);
         }
     }
 
