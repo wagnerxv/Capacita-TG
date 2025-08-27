@@ -81,6 +81,9 @@ class AdminDashboard {
         // Student filters
         document.getElementById('studentCityFilter')?.addEventListener('change', this.applyStudentFilters.bind(this));
         document.getElementById('studentSearchInput')?.addEventListener('input', this.applyStudentFilters.bind(this));
+        document.getElementById('situacaoMilitarFilter')?.addEventListener('change', this.applyStudentFilters.bind(this));
+        document.getElementById('tiroDeGuerraFilter')?.addEventListener('change', this.applyStudentFilters.bind(this));
+
 
         // Company filters
         document.getElementById('companyCityFilter')?.addEventListener('change', this.applyCompanyFilters.bind(this));
@@ -730,6 +733,9 @@ class AdminDashboard {
     }
 
     escapeHtml(text) {
+        if (typeof text !== 'string') {
+            return '';
+        }
         const map = {
             '&': '&amp;',
             '<': '&lt;',
@@ -806,20 +812,24 @@ class AdminDashboard {
         tbody.innerHTML = this.filteredStudents.map(student => {
             const registrationDate = new Date(student.dataRegistro);
             const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 days
-            
+            const isAtirador = student.situacao_militar === 'matriculado e servindo';
+            const rowClass = isAtirador ? 'atirador-row' : '';
+
             return `
-            <tr>
+            <tr class="${rowClass}">
                 <td>
                     <div class="user-info">
                         <div class="user-name">${this.escapeHtml(student.nome)}</div>
                         <div class="user-email">${this.escapeHtml(student.email)}</div>
+                        ${isAtirador ? '<span class="atirador-badge">Atirador</span>' : ''}
                     </div>
                 </td>
                 <td>
                     <span class="city-badge">${this.escapeHtml(student.cidade)}</span>
                 </td>
                 <td>
-                    <div class="phone-info">${this.escapeHtml(student.telefone || 'Não informado')}</div>
+                    ${this.escapeHtml(student.situacao_militar || 'N/A')}
+                    ${student.tiro_guerra ? `<br><small>(${this.escapeHtml(student.tiro_guerra)})</small>` : ''}
                 </td>
                 <td>
                     <div class="date-info">
@@ -860,19 +870,24 @@ class AdminDashboard {
 
     applyStudentFilters() {
         const cityFilter = document.getElementById('studentCityFilter').value;
+        const situacaoMilitarFilter = document.getElementById('situacaoMilitarFilter').value;
+        const tiroDeGuerraFilter = document.getElementById('tiroDeGuerraFilter').value;
         const searchTerm = document.getElementById('studentSearchInput').value.toLowerCase();
 
         this.filteredStudents = this.students.filter(student => {
             const matchesCity = !cityFilter || student.cidade === cityFilter;
+            const matchesSituacao = !situacaoMilitarFilter || student.situacao_militar === situacaoMilitarFilter;
+            const matchesTg = !tiroDeGuerraFilter || student.tiro_guerra === tiroDeGuerraFilter;
             const matchesSearch = !searchTerm || 
                 student.nome.toLowerCase().includes(searchTerm) ||
-                student.email.toLowerCase().includes(searchTerm);
+                (student.email && student.email.toLowerCase().includes(searchTerm));
 
-            return matchesCity && matchesSearch;
+            return matchesCity && matchesSituacao && matchesTg && matchesSearch;
         });
 
         this.renderStudents();
     }
+
 
     viewStudent(studentId) {
         const student = this.students.find(s => s.id === studentId);
@@ -883,6 +898,8 @@ class AdminDashboard {
 
     showStudentDetails(student) {
         const detailsContainer = document.getElementById('studentDetails');
+        const isAtirador = student.situacao_militar === 'matriculado e servindo';
+
         detailsContainer.innerHTML = `
             <div class="detail-row">
                 <div class="detail-label">Nome Completo</div>
@@ -900,6 +917,15 @@ class AdminDashboard {
                 <div class="detail-label">Telefone</div>
                 <div class="detail-value">${this.escapeHtml(student.telefone || 'Não informado')}</div>
             </div>
+            <div class="detail-row ${isAtirador ? 'atirador-highlight' : ''}">
+                <div class="detail-label">Situação Militar</div>
+                <div class="detail-value">${this.escapeHtml(student.situacao_militar || 'Não informado')}</div>
+            </div>
+            ${isAtirador ? `
+            <div class="detail-row atirador-highlight">
+                <div class="detail-label">Tiro de Guerra</div>
+                <div class="detail-value">${this.escapeHtml(student.tiro_guerra || 'Não informado')}</div>
+            </div>` : ''}
             <div class="detail-row">
                 <div class="detail-label">Habilidades</div>
                 <div class="detail-value multiline">${this.escapeHtml(student.habilidades || 'Não informado')}</div>

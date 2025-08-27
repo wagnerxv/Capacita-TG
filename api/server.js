@@ -133,7 +133,7 @@ function generateId() {
 // POST /api/auth/register - Registro de usuário
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { nome, email, senha, tipoUsuario, ...otherData } = req.body;
+    const { nome, email, senha, tipoUsuario, sexo, situacao_militar, tiro_guerra, ...otherData } = req.body;
 
     // Validação básica
     if (!nome || !email || !senha || !tipoUsuario) {
@@ -162,6 +162,9 @@ app.post('/api/auth/register', async (req, res) => {
       email: email.toLowerCase(),
       senha: hashedPassword,
       tipoUsuario,
+      sexo: sexo || null,
+      situacao_militar: situacao_militar || null,
+      tiro_guerra: tiro_guerra || null,
       ...otherData,
       dataRegistro: new Date().toISOString(),
       ativo: true
@@ -189,6 +192,9 @@ app.post('/api/auth/register', async (req, res) => {
         habilidades: otherData.habilidades || '',
         experiencia: otherData.experiencia || '',
         formacao: otherData.formacao || '',
+        sexo: sexo || null,
+        situacao_militar: situacao_militar || null,
+        tiro_guerra: tiro_guerra || null,
         tipo: 'atirador',
         dataRegistro: newUser.dataRegistro
       };
@@ -645,7 +651,11 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
     Object.assign(userToUpdate, {
         nome: updateData.nome || updateData.nomeEmpresa || userToUpdate.nome,
         email: updateData.email || userToUpdate.email,
-        ...updateData
+        sexo: updateData.sexo,
+        situacao_militar: updateData.situacao_militar,
+        tiro_guerra: updateData.tiro_guerra,
+        ...updateData,
+        ultima_atualizacao: new Date().toISOString() // Adiciona timestamp de atualização
     });
     
     allUsers[userIndex] = userToUpdate;

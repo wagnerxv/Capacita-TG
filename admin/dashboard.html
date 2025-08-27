@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-page">
-    <!-- Header -->
     <header class="admin-header">
         <div class="admin-container">
             <div class="header-content">
@@ -25,7 +24,6 @@
         </div>
     </header>
 
-    <!-- Navigation -->
     <nav class="admin-nav">
         <div class="admin-container">
             <div class="nav-tabs">
@@ -49,12 +47,9 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="admin-main">
         <div class="admin-container">
-            <!-- Courses Section -->
             <div class="content-section active" id="coursesSection">
-                <!-- Dashboard Header -->
                 <div class="dashboard-header">
                     <h2>Gerenciamento de Cursos</h2>
                     <button class="btn btn-primary" id="addCourseBtn">
@@ -63,7 +58,6 @@
                     </button>
                 </div>
 
-            <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">📚</div>
@@ -109,7 +103,6 @@
                 </div>
             </div>
 
-            <!-- Courses Table -->
             <div class="table-container">
                 <div class="table-header">
                     <h3>Lista de Cursos</h3>
@@ -146,8 +139,7 @@
                             </tr>
                         </thead>
                         <tbody id="coursesTableBody">
-                            <!-- Cursos seram carregados aqui -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
 
@@ -188,13 +180,11 @@
             </div>
             </div>
 
-            <!-- Students Section -->
             <div class="content-section" id="studentsSection">
                 <div class="dashboard-header">
                     <h2>Gerenciamento de Alunos</h2>
                 </div>
 
-                <!-- Students Stats -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">🎓</div>
@@ -212,7 +202,6 @@
                     </div>
                 </div>
 
-                <!-- Students Table -->
                 <div class="table-container">
                     <div class="table-header">
                         <h3>Lista de Alunos</h3>
@@ -226,6 +215,23 @@
                                 <option value="Teotônio Vilela">Teotônio Vilela</option>
                                 <option value="Maceió">Maceió</option>
                             </select>
+                            <select id="situacaoMilitarFilter" class="filter-select">
+                                <option value="">Todas Situações</option>
+                                <option value="Alistado">Alistado</option>
+                                <option value="matriculado e servindo">Atirador Ativo</option>
+                                <option value="Reservista concluído">Reservista</option>
+                                <option value="Dispensado de corporação">Dispensado</option>
+                            </select>
+                            <select id="tiroDeGuerraFilter" class="filter-select">
+                                <option value="">Todos os TGs</option>
+                                <option value="TG 07-015 - Arapiraca">TG 07-015 - Arapiraca</option>
+                                <option value="59º BI Mtz - Maceió">59º BI Mtz - Maceió</option>
+                                <option value="TG 07-007 - Palmeira dos Índios">TG 07-007 - Palmeira dos Índios</option>
+                                <option value="TG 07-008 - Penedo">TG 07-008 - Penedo</option>
+                                <option value="TG 07-010 - Delmiro Gouveia">TG 07-010 - Delmiro Gouveia</option>
+                                <option value="TG 07-022 - Teotônio Vilela">TG 07-022 - Teotônio Vilela</option>
+                                <option value="TG 07-009 - São José da Laje">TG 07-009 - São José da Laje</option>
+                            </select>
                             <input type="text" id="studentSearchInput" placeholder="Buscar alunos..." class="search-input">
                         </div>
                     </div>
@@ -235,7 +241,7 @@
                             <tr>
                                 <th>👤 Aluno</th>
                                 <th>🏙️ Cidade</th>
-                                <th>📱 Telefone</th>
+                                <th>Situação Militar</th>
                                 <th>📅 Cadastro</th>
                                 <th>⚡ Status</th>
                                 <th>🔧 Ações</th>
@@ -258,13 +264,11 @@
                 </div>
             </div>
 
-            <!-- Companies Section -->
             <div class="content-section" id="companiesSection">
                 <div class="dashboard-header">
                     <h2>Gerenciamento de Empresas</h2>
                 </div>
 
-                <!-- Companies Stats -->
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">🏢</div>
@@ -282,7 +286,6 @@
                     </div>
                 </div>
 
-                <!-- Companies Table -->
                 <div class="table-container">
                     <div class="table-header">
                         <h3>Lista de Empresas</h3>
@@ -329,7 +332,6 @@
         </div>
     </main>
 
-    <!-- Course Modal -->
     <div class="modal-overlay" id="courseModal">
         <div class="modal modal-large">
             <div class="modal-header">
@@ -413,7 +415,6 @@
         </div>
     </div>
 
-    <!-- Modal de confirmação do delete -->
     <div class="modal-overlay" id="deleteModal">
         <div class="modal">
             <div class="modal-header danger">
@@ -437,7 +438,6 @@
         </div>
     </div>
 
-    <!-- Student Details Modal -->
     <div class="modal-overlay" id="studentModal">
         <div class="modal modal-large">
             <div class="modal-header">
@@ -446,8 +446,7 @@
             </div>
             <div class="modal-content">
                 <div class="student-details" id="studentDetails">
-                    <!-- Student details will be populated here -->
-                </div>
+                    </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="closeStudentDetailsBtn">Fechar</button>
@@ -455,7 +454,6 @@
         </div>
     </div>
 
-    <!-- Company Details Modal -->
     <div class="modal-overlay" id="companyModal">
         <div class="modal modal-large">
             <div class="modal-header">
@@ -464,8 +462,7 @@
             </div>
             <div class="modal-content">
                 <div class="company-details" id="companyDetails">
-                    <!-- Company details will be populated here -->
-                </div>
+                    </div>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-secondary" id="closeCompanyDetailsBtn">Fechar</button>
@@ -473,7 +470,6 @@
         </div>
     </div>
 
-    <!-- Modal de Detalhes da Área -->
     <div class="modal-overlay" id="areaDetailsModal">
         <div class="modal modal-large">
             <div class="modal-header">
@@ -508,8 +504,7 @@
                 <div class="recent-courses-section">
                     <h4>Cursos Mais Recentes</h4>
                     <div id="recentCoursesList" class="recent-courses-list">
-                        <!-- Lista será preenchida dinamicamente -->
-                    </div>
+                        </div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -518,7 +513,6 @@
         </div>
     </div>
 
-    <!-- Success Toast -->
     <div class="toast" id="successToast">
         <div class="toast-content">
             <span class="toast-icon">✅</span>

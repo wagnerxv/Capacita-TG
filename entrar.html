@@ -311,6 +311,10 @@
         .form-fade {
             transition: opacity 0.4s ease-in-out;
         }
+        
+        .hidden-field {
+            display: none;
+        }
 
         @media (max-width: 768px) {
             .register-container {
@@ -449,6 +453,44 @@
                                             <option value="pos-graduacao">Pós-graduação</option>
                                         </select>
                                     </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="sexo">Sexo *</label>
+                                    <select id="sexo" name="sexo" required>
+                                        <option value="">Selecione seu sexo</option>
+                                        <option value="Feminino">Feminino</option>
+                                        <option value="Masculino">Masculino</option>
+                                    </select>
+                                </div>
+
+                                <div id="situacaoMilitarContainer" class="form-group hidden-field">
+                                    <label for="situacaoMilitar">Situação Militar *</label>
+                                    <select id="situacaoMilitar" name="situacao_militar">
+                                        <option value="">Selecione sua situação</option>
+                                        <option value="Alistado">Alistado</option>
+                                        <option value="matriculado e servindo">Alistado, matriculado e servindo</option>
+                                        <option value="Reservista concluído">Reservista concluído</option>
+                                        <option value="Dispensado de corporação">Dispensado de corporação</option>
+                                        <option value="Outra">Outra situação</option>
+                                    </select>
+                                    <input type="text" id="outraSituacao" name="outra_situacao" class="hidden-field" placeholder="Especifique outra situação" style="margin-top: 0.5rem;">
+                                </div>
+
+                                <div id="tiroDeGuerraContainer" class="form-group hidden-field">
+                                    <label for="tiroDeGuerra">Tiro de Guerra *</label>
+                                    <select id="tiroDeGuerra" name="tiro_guerra">
+                                        <option value="">Selecione o TG</option>
+                                        <option value="TG 07-015 - Arapiraca">TG 07-015 - Arapiraca</option>
+                                        <option value="59º BI Mtz - Maceió">59º BI Mtz - Maceió</option>
+                                        <option value="TG 07-007 - Palmeira dos Índios">TG 07-007 - Palmeira dos Índios</option>
+                                        <option value="TG 07-008 - Penedo">TG 07-008 - Penedo</option>
+                                        <option value="TG 07-010 - Delmiro Gouveia">TG 07-010 - Delmiro Gouveia</option>
+                                        <option value="TG 07-022 - Teotônio Vilela">TG 07-022 - Teotônio Vilela</option>
+                                        <option value="TG 07-009 - São José da Laje">TG 07-009 - São José da Laje</option>
+                                        <option value="Outro">Outro TG</option>
+                                    </select>
+                                    <input type="text" id="outroTg" name="outro_tg" class="hidden-field" placeholder="Especifique outro TG" style="margin-top: 0.5rem;">
                                 </div>
                 
                                 <div class="form-group">
@@ -670,6 +712,7 @@
             init() {
                 this.setupEventListeners();
                 this.populateCitySelects();
+                this.setupConditionalFields();
             }
 
             populateCitySelects() {
@@ -725,6 +768,47 @@
                             this.hideModal(overlay.id);
                         }
                     });
+                });
+            }
+
+            setupConditionalFields() {
+                const sexoSelect = document.getElementById('sexo');
+                const situacaoMilitarContainer = document.getElementById('situacaoMilitarContainer');
+                const situacaoMilitarSelect = document.getElementById('situacaoMilitar');
+                const outraSituacaoInput = document.getElementById('outraSituacao');
+                const tiroDeGuerraContainer = document.getElementById('tiroDeGuerraContainer');
+                const tiroDeGuerraSelect = document.getElementById('tiroDeGuerra');
+                const outroTgInput = document.getElementById('outroTg');
+
+                sexoSelect.addEventListener('change', (e) => {
+                    const isMasculino = e.target.value === 'Masculino';
+                    situacaoMilitarContainer.classList.toggle('hidden-field', !isMasculino);
+                    situacaoMilitarSelect.required = isMasculino;
+                    if (!isMasculino) {
+                        situacaoMilitarSelect.value = '';
+                        // Disparar eventos de change para esconder campos aninhados
+                        situacaoMilitarSelect.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                situacaoMilitarSelect.addEventListener('change', (e) => {
+                    const isServindo = e.target.value === 'matriculado e servindo';
+                    tiroDeGuerraContainer.classList.toggle('hidden-field', !isServindo);
+                    tiroDeGuerraSelect.required = isServindo;
+                    if (!isServindo) {
+                        tiroDeGuerraSelect.value = '';
+                         tiroDeGuerraSelect.dispatchEvent(new Event('change'));
+                    }
+
+                    const isOutraSituacao = e.target.value === 'Outra';
+                    outraSituacaoInput.classList.toggle('hidden-field', !isOutraSituacao);
+                    outraSituacaoInput.required = isOutraSituacao;
+                });
+
+                tiroDeGuerraSelect.addEventListener('change', (e) => {
+                    const isOutroTg = e.target.value === 'Outro';
+                    outroTgInput.classList.toggle('hidden-field', !isOutroTg);
+                    outroTgInput.required = isOutroTg;
                 });
             }
 
@@ -846,7 +930,7 @@
                     });
 
                 const requiredFields = {
-                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador', 'senhaAtirador', 'confirmaSenhaAtirador'],
+                    'atirador': ['nomeAtirador', 'cidadeAtirador', 'emailAtirador', 'telefoneAtirador', 'idadeAtirador', 'escolaridadeAtirador', 'habilidadesAtirador', 'senhaAtirador', 'confirmaSenhaAtirador', 'sexo'],
                     'empregador': ['nomeEmpresa', 'cnpjEmpresa', 'cidadeEmpresa', 'telefoneEmpresa', 'emailEmpresa', 'setorEmpresa', 'senhaEmpresa', 'confirmaSenhaEmpresa']
                 };
 
@@ -921,6 +1005,16 @@
             }
 
             getAtiradorData() {
+                 let situacaoMilitar = document.getElementById('situacaoMilitar').value;
+                 if (situacaoMilitar === 'Outra') {
+                    situacaoMilitar = document.getElementById('outraSituacao').value;
+                 }
+                 
+                 let tiroDeGuerra = document.getElementById('tiroDeGuerra').value;
+                 if (tiroDeGuerra === 'Outro') {
+                    tiroDeGuerra = document.getElementById('outroTg').value;
+                 }
+
                 return {
                     nome: document.getElementById('nomeAtirador').value.trim(),
                     email: document.getElementById('emailAtirador').value.trim(),
@@ -930,7 +1024,10 @@
                     habilidades: document.getElementById('habilidadesAtirador').value.trim(),
                     experiencia: document.getElementById('experienciaAtirador').value.trim(),
                     formacao: document.getElementById('formacaoAtirador').value.trim(),
-                    senha: document.getElementById('senhaAtirador').value
+                    senha: document.getElementById('senhaAtirador').value,
+                    sexo: document.getElementById('sexo').value,
+                    situacao_militar: situacaoMilitar,
+                    tiro_guerra: tiroDeGuerra,
                 };
             }
 

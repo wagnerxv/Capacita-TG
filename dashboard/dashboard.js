@@ -4,6 +4,7 @@ class DashboardController {
         this.apiUrl = '/api';
         this.currentUser = null;
         this.isEmployer = false;
+        this.saveTimeout = null;
         this.init();
     }
 
@@ -294,6 +295,15 @@ class DashboardController {
         }
 
         if (editProfileForm) {
+            // Auto-save no modal de edição
+             editProfileForm.addEventListener('input', () => {
+                this.showSavingIndicator('Salvando...');
+                clearTimeout(this.saveTimeout);
+                this.saveTimeout = setTimeout(() => {
+                    this.handleProfileUpdate(new Event('submit', { cancelable: true }));
+                }, 1500); // Salva após 1.5s de inatividade
+            });
+
             editProfileForm.addEventListener('submit', (e) => this.handleProfileUpdate(e));
         }
 
@@ -386,14 +396,15 @@ class DashboardController {
     }
 
     async handleProfileUpdate(e) {
-        e.preventDefault();
-        const saveButton = document.getElementById('saveProfileBtn');
+        if (e.type === 'submit') {
+            e.preventDefault();
+        }
         
-        try {
-            this.showButtonLoading('saveProfileBtn', true);
+        const form = document.getElementById('editProfileForm');
 
-            // Coletar dados do formulário
-            const form = e.target;
+        try {
+             this.showSavingIndicator('Salvando...');
+
             const formData = new FormData(form);
             const updateData = {};
             for (let [key, value] of formData.entries()) {
@@ -401,7 +412,6 @@ class DashboardController {
                 updateData[newKey.charAt(0).toLowerCase() + newKey.slice(1)] = value;
             }
 
-            // Enviar dados para a API
             const response = await fetch(`${this.apiUrl}/users/${this.currentUser.id}`, {
                 method: 'PUT',
                 headers: {
@@ -416,18 +426,36 @@ class DashboardController {
             if (!response.ok) {
                 throw new Error(responseData.error || 'Erro ao atualizar perfil.');
             }
-
-            this.hideModal('editProfileModal');
-            this.showSuccessModal('Perfil Atualizado', 'Suas informações foram salvas com sucesso!');
+            
+            this.showSavingIndicator('Salvo');
             
             // Recarregar dados do perfil para refletir as mudanças
             await this.loadUserProfile();
 
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
-            this.showErrorModal('Erro', error.message || 'Não foi possível atualizar o perfil.');
-        } finally {
-            this.showButtonLoading('saveProfileBtn', false);
+            this.showSavingIndicator('Erro ao salvar', true);
+        }
+    }
+
+    showSavingIndicator(status, isError = false) {
+        let saveIndicator = document.getElementById('saveIndicator');
+        if (!saveIndicator) {
+            saveIndicator = document.createElement('span');
+            saveIndicator.id = 'saveIndicator';
+            saveIndicator.style.marginLeft = 'auto';
+            saveIndicator.style.fontWeight = '500';
+            document.querySelector('#editProfileModal .modal-actions').prepend(saveIndicator);
+        }
+
+        saveIndicator.textContent = status;
+        saveIndicator.style.color = isError ? '#DC3545' : '#28a745';
+        
+        // Esconde a mensagem após um tempo
+        if(status === 'Salvo' || isError) {
+             setTimeout(() => {
+                saveIndicator.textContent = '';
+            }, 3000);
         }
     }
 
