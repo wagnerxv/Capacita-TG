@@ -149,34 +149,53 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editNome">Nome Completo</label>
-                            <input type="text" id="editNome" required>
+                            <input type="text" id="editNome" name="editNome" required>
                         </div>
                         <div class="form-group">
                             <label for="editEmail">Email</label>
-                            <input type="email" id="editEmail" required>
+                            <input type="email" id="editEmail" name="editEmail" required>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="editTelefone">Telefone</label>
-                            <input type="tel" id="editTelefone">
+                            <input type="tel" id="editTelefone" name="editTelefone">
                         </div>
                         <div class="form-group">
                             <label for="editCidade">Cidade</label>
-                            <input type="text" id="editCidade">
+                            <input type="text" id="editCidade" name="editCidade">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editIdade">Idade</label>
+                            <input type="number" id="editIdade" name="editIdade" min="16" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEscolaridade">Escolaridade</label>
+                            <select id="editEscolaridade" name="editEscolaridade">
+                                <option value="">Selecione</option>
+                                <option value="Ensino Fundamental Incompleto">Ensino Fundamental Incompleto</option>
+                                <option value="Ensino Fundamental Completo">Ensino Fundamental Completo</option>
+                                <option value="Ensino Médio Incompleto">Ensino Médio Incompleto</option>
+                                <option value="Ensino Médio Completo">Ensino Médio Completo</option>
+                                <option value="Ensino Superior Incompleto">Ensino Superior Incompleto</option>
+                                <option value="Ensino Superior Completo">Ensino Superior Completo</option>
+                                <option value="Pós-graduação">Pós-graduação</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="editHabilidades">Habilidades</label>
-                        <textarea id="editHabilidades" rows="3" placeholder="Descreva suas principais habilidades..."></textarea>
+                        <textarea id="editHabilidades" name="editHabilidades" rows="3" placeholder="Descreva suas principais habilidades..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="editExperiencia">Experiência Profissional</label>
-                        <textarea id="editExperiencia" rows="3" placeholder="Descreva sua experiência profissional..."></textarea>
+                        <textarea id="editExperiencia" name="editExperiencia" rows="3" placeholder="Descreva sua experiência profissional..."></textarea>
                     </div>
                     <div class="form-group">
                         <label for="editFormacao">Formação</label>
-                        <textarea id="editFormacao" rows="3" placeholder="Descreva sua formação acadêmica..."></textarea>
+                        <textarea id="editFormacao" name="editFormacao" rows="3" placeholder="Descreva sua formação acadêmica..."></textarea>
                     </div>
                 </form>
             </div>
