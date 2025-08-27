@@ -159,6 +159,8 @@ class DashboardController {
                 document.getElementById('editExperiencia').value = student.experiencia || '';
                 document.getElementById('editFormacao').value = student.formacao || '';
             }
+        }
+    }
 
     buildEmployerProfile(company) {
         return `
@@ -339,7 +341,7 @@ class DashboardController {
                 this.saveTimeout = setTimeout(() => {
                     this.handleProfileUpdate(new Event('submit', { cancelable: true }));
                 }, 1500); // Salva após 1.5s de inatividade
-            });
+                         }             );
 
             editProfileForm.addEventListener('submit', (e) => this.handleProfileUpdate(e));
         }
@@ -614,7 +616,7 @@ class DashboardController {
         if(status === 'Salvo' || isError) {
              setTimeout(() => {
                 saveIndicator.textContent = '';
-            }, 3000);
+                         }, 3000             );
         }
     }
 
