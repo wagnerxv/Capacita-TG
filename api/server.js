@@ -638,6 +638,12 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
     if (req.user.id !== id) {
       return res.status(403).json({ error: 'Acesso negado.' });
     }
+    
+    // Validação dos dados recebidos
+    const validationError = validateUserUpdateData(updateData, req.user.tipoUsuario);
+    if (validationError) {
+      return res.status(400).json({ error: validationError });
+    }
 
     const allUsers = await readUsers();
     const userIndex = allUsers.findIndex(u => u.id === id);
@@ -646,35 +652,89 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Usuário não encontrado.' });
     }
 
-    // Atualiza os dados principais do usuário
+    // Verificar se email já existe (se foi alterado)
     const userToUpdate = allUsers[userIndex];
+    if (updateData.email && updateData.email !== userToUpdate.email) {
+      const emailExists = allUsers.some(u => u.id !== id && u.email.toLowerCase() === updateData.email.toLowerCase());
+      if (emailExists) {
+        return res.status(409).json({ error: 'Este email já está sendo usado por outro usuário.' });
+      }
+    }
+
+    // Atualiza os dados principais do usuário
     Object.assign(userToUpdate, {
-        nome: updateData.nome || updateData.nomeEmpresa || userToUpdate.nome,
-        email: updateData.email || userToUpdate.email,
-        sexo: updateData.sexo,
-        situacao_militar: updateData.situacao_militar,
-        tiro_guerra: updateData.tiro_guerra,
-        ...updateData,
-        ultima_atualizacao: new Date().toISOString() // Adiciona timestamp de atualização
+      nome: updateData.nome || updateData.nomeEmpresa || userToUpdate.nome,
+      email: updateData.email || userToUpdate.email,
+      sexo: updateData.sexo || userToUpdate.sexo,
+      situacao_militar: updateData.situacao_militar || userToUpdate.situacao_militar,
+      tiro_guerra: updateData.tiro_guerra || userToUpdate.tiro_guerra,
+      telefone: updateData.telefone || userToUpdate.telefone,
+      cidade: updateData.cidade || userToUpdate.cidade,
+      ultima_atualizacao: new Date().toISOString()
     });
     
+    // Adicionar campos específicos do tipo de usuário
+    if (userToUpdate.tipoUsuario === 'empregador') {
+      Object.assign(userToUpdate, {
+        nomeEmpresa: updateData.nomeEmpresa || userToUpdate.nomeEmpresa,
+        cnpj: updateData.cnpj || userToUpdate.cnpj,
+        setor: updateData.setor || userToUpdate.setor,
+        informacoes: updateData.informacoes || userToUpdate.informacoes
+      });
+    } else {
+      Object.assign(userToUpdate, {
+        idade: updateData.idade || userToUpdate.idade,
+        escolaridade: updateData.escolaridade || userToUpdate.escolaridade,
+        habilidades: updateData.habilidades || userToUpdate.habilidades,
+        experiencia: updateData.experiencia || userToUpdate.experiencia,
+        formacao: updateData.formacao || userToUpdate.formacao
+      });
+    }
+    
     allUsers[userIndex] = userToUpdate;
-    await writeUsers(allUsers);
+    const usersSaved = await writeUsers(allUsers);
+    
+    if (!usersSaved) {
+      return res.status(500).json({ error: 'Erro ao salvar dados do usuário.' });
+    }
 
     // Atualiza a coleção específica (atirador ou empregador)
     if (userToUpdate.tipoUsuario === 'atirador') {
         const students = await readStudents();
         const studentIndex = students.findIndex(s => s.id === id);
         if (studentIndex !== -1) {
-            Object.assign(students[studentIndex], updateData);
-            await writeStudents(students);
+          Object.assign(students[studentIndex], {
+            nome: userToUpdate.nome,
+            email: userToUpdate.email,
+            telefone: userToUpdate.telefone,
+            cidade: userToUpdate.cidade,
+            idade: userToUpdate.idade,
+            escolaridade: userToUpdate.escolaridade,
+            habilidades: userToUpdate.habilidades,
+            experiencia: userToUpdate.experiencia,
+            formacao: userToUpdate.formacao,
+            sexo: userToUpdate.sexo,
+            situacao_militar: userToUpdate.situacao_militar,
+            tiro_guerra: userToUpdate.tiro_guerra,
+            ultima_atualizacao: userToUpdate.ultima_atualizacao
+          });
+          await writeStudents(students);
         }
     } else if (userToUpdate.tipoUsuario === 'empregador') {
         const companies = await readCompanies();
         const companyIndex = companies.findIndex(c => c.id === id);
         if (companyIndex !== -1) {
-            Object.assign(companies[companyIndex], updateData);
-            await writeCompanies(companies);
+          Object.assign(companies[companyIndex], {
+            nomeEmpresa: userToUpdate.nomeEmpresa,
+            cnpj: userToUpdate.cnpj,
+            email: userToUpdate.email,
+            telefone: userToUpdate.telefone,
+            cidade: userToUpdate.cidade,
+            setor: userToUpdate.setor,
+            informacoes: userToUpdate.informacoes,
+            ultima_atualizacao: userToUpdate.ultima_atualizacao
+          });
+          await writeCompanies(companies);
         }
     }
     
@@ -686,6 +746,42 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor ao atualizar perfil.' });
   }
 });
+
+// Função para validar dados de atualização do usuário
+function validateUserUpdateData(data, userType) {
+  // Validações básicas
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    return 'Email inválido.';
+  }
+  
+  if (data.telefone && data.telefone.replace(/\D/g, '').length < 10) {
+    return 'Telefone inválido.';
+  }
+  
+  // Validações específicas para empregadores
+  if (userType === 'empregador') {
+    if (data.cnpj && data.cnpj.replace(/\D/g, '').length !== 14) {
+      return 'CNPJ deve ter 14 dígitos.';
+    }
+    
+    if (data.nomeEmpresa && data.nomeEmpresa.trim().length < 2) {
+      return 'Nome da empresa deve ter pelo menos 2 caracteres.';
+    }
+  }
+  
+  // Validações específicas para candidatos
+  if (userType === 'atirador') {
+    if (data.nome && data.nome.trim().length < 2) {
+      return 'Nome deve ter pelo menos 2 caracteres.';
+    }
+    
+    if (data.idade && (isNaN(data.idade) || data.idade < 16 || data.idade > 100)) {
+      return 'Idade deve ser um número entre 16 e 100.';
+    }
+  }
+  
+  return null; // Sem erros
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -4,7 +4,6 @@ class DashboardController {
         this.apiUrl = '/api';
         this.currentUser = null;
         this.isEmployer = false;
-        this.saveTimeout = null;
         this.init();
     }
 
@@ -120,6 +119,47 @@ class DashboardController {
         } catch (error) {
             console.error('Erro ao carregar perfil:', error);
             profileContent.innerHTML = '<p class="error-message">Erro ao carregar perfil</p>';
+        }
+    }
+    
+    async openEditProfileModal() {
+        try {
+            // Limpar erros anteriores
+            const form = document.getElementById('editProfileForm');
+            form.querySelectorAll('.field-error').forEach(error => error.remove());
+            form.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
+            
+            if (this.isEmployer) {
+                // Carregar dados da empresa
+                const response = await fetch(`${this.apiUrl}/companies`);
+                const companies = await response.json();
+                const company = companies.find(c => c.id === this.currentUser.id) || this.currentUser;
+
+                document.getElementById('editNomeEmpresa').value = company.nomeEmpresa || company.nome || '';
+                document.getElementById('editCnpj').value = company.cnpj || '';
+                document.getElementById('editEmail').value = company.email || '';
+                document.getElementById('editTelefone').value = company.telefone || '';
+                document.getElementById('editCidade').value = company.cidade || '';
+                document.getElementById('editSetor').value = company.setor || '';
+                document.getElementById('editInformacoes').value = company.informacoes || '';
+            } else {
+                // Carregar dados do estudante
+                const response = await fetch(`${this.apiUrl}/students`);
+                const students = await response.json();
+                const student = students.find(s => s.id === this.currentUser.id) || this.currentUser;
+
+                document.getElementById('editNome').value = student.nome || '';
+                document.getElementById('editEmail').value = student.email || '';
+                document.getElementById('editTelefone').value = student.telefone || '';
+                document.getElementById('editCidade').value = student.cidade || '';
+                document.getElementById('editIdade').value = student.idade || '';
+                document.getElementById('editEscolaridade').value = student.escolaridade || '';
+                document.getElementById('editHabilidades').value = student.habilidades || '';
+                document.getElementById('editExperiencia').value = student.experiencia || '';
+                document.getElementById('editFormacao').value = student.formacao || '';
+            }
+        } catch (error) {
+            console.error('Erro ao abrir modal de edição:', error);
         }
     }
 
@@ -295,15 +335,6 @@ class DashboardController {
         }
 
         if (editProfileForm) {
-            // Auto-save no modal de edição
-             editProfileForm.addEventListener('input', () => {
-                this.showSavingIndicator('Salvando...');
-                clearTimeout(this.saveTimeout);
-                this.saveTimeout = setTimeout(() => {
-                    this.handleProfileUpdate(new Event('submit', { cancelable: true }));
-                }, 1500); // Salva após 1.5s de inatividade
-            });
-
             editProfileForm.addEventListener('submit', (e) => this.handleProfileUpdate(e));
         }
 
@@ -401,6 +432,11 @@ class DashboardController {
         }
         
         const form = document.getElementById('editProfileForm');
+        
+        // Validar formulário antes de enviar
+        if (!this.validateProfileForm(form)) {
+            return;
+        }
 
         try {
              this.showSavingIndicator('Salvando...');
@@ -408,14 +444,25 @@ class DashboardController {
             const formData = new FormData(form);
             const updateData = {};
             for (let [key, value] of formData.entries()) {
-                const newKey = key.replace('edit', '');
-                updateData[newKey.charAt(0).toLowerCase() + newKey.slice(1)] = value;
+                // Remover prefixo 'edit' e converter para camelCase
+                const newKey = key.replace(/^edit/, '');
+                const camelCaseKey = newKey.charAt(0).toLowerCase() + newKey.slice(1);
+                updateData[camelCaseKey] = value.trim();
+            }
+            
+            // Adicionar campos específicos baseados no tipo de usuário
+            if (this.isEmployer) {
+                // Para empregadores, garantir que o nome da empresa seja usado
+                if (updateData.nomeEmpresa) {
+                    updateData.nome = updateData.nomeEmpresa;
+                }
             }
 
             const response = await fetch(`${this.apiUrl}/users/${this.currentUser.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`,
                 },
                 credentials: 'include',
                 body: JSON.stringify(updateData),
@@ -427,15 +474,121 @@ class DashboardController {
                 throw new Error(responseData.error || 'Erro ao atualizar perfil.');
             }
             
+            // Atualizar dados do usuário atual
+            this.currentUser = { ...this.currentUser, ...responseData.user };
+            
             this.showSavingIndicator('Salvo');
             
             // Recarregar dados do perfil para refletir as mudanças
             await this.loadUserProfile();
+            
+            // Atualizar sistema de autenticação
+            if (window.authSystem) {
+                window.authSystem.currentUser = this.currentUser;
+                window.authSystem.updateUI(true);
+            }
+            
+            // Mostrar mensagem de sucesso se for submit manual
+            if (e.type === 'submit') {
+                this.hideModal('editProfileModal');
+                this.showSuccessModal('Perfil Atualizado', 'Suas informações foram atualizadas com sucesso!');
+            }
 
         } catch (error) {
             console.error('Erro ao atualizar perfil:', error);
             this.showSavingIndicator('Erro ao salvar', true);
+            
+            // Mostrar erro detalhado para o usuário
+            if (e.type === 'submit') {
+                this.showError(`Erro ao salvar perfil: ${error.message}`);
+            }
         }
+    }
+    
+    validateProfileForm(form) {
+        const requiredFields = this.isEmployer 
+            ? ['editNomeEmpresa', 'editEmail', 'editCnpj']
+            : ['editNome', 'editEmail'];
+            
+        let isValid = true;
+        const errors = [];
+        
+        // Limpar erros anteriores
+        form.querySelectorAll('.field-error').forEach(error => error.remove());
+        form.querySelectorAll('.error').forEach(field => field.classList.remove('error'));
+        
+        // Validar campos obrigatórios
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field || !field.value.trim()) {
+                this.showFieldError(field, 'Este campo é obrigatório');
+                isValid = false;
+            }
+        });
+        
+        // Validar email
+        const emailField = document.getElementById('editEmail');
+        if (emailField && emailField.value.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailField.value.trim())) {
+                this.showFieldError(emailField, 'Email inválido');
+                isValid = false;
+            }
+        }
+        
+        // Validar CNPJ para empregadores
+        if (this.isEmployer) {
+            const cnpjField = document.getElementById('editCnpj');
+            if (cnpjField && cnpjField.value.trim()) {
+                const cnpj = cnpjField.value.replace(/\D/g, '');
+                if (cnpj.length !== 14) {
+                    this.showFieldError(cnpjField, 'CNPJ deve ter 14 dígitos');
+                    isValid = false;
+                }
+            }
+        }
+        
+        // Validar telefone se preenchido
+        const telefoneField = document.getElementById('editTelefone');
+        if (telefoneField && telefoneField.value.trim()) {
+            const telefone = telefoneField.value.replace(/\D/g, '');
+            if (telefone.length < 10) {
+                this.showFieldError(telefoneField, 'Telefone inválido');
+                isValid = false;
+            }
+        }
+        
+        return isValid;
+    }
+    
+    showFieldError(field, message) {
+        if (!field) return;
+        
+        field.classList.add('error');
+        
+        const errorElement = document.createElement('span');
+        errorElement.className = 'field-error';
+        errorElement.textContent = message;
+        errorElement.style.cssText = `
+            color: #DC3545;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: block;
+        `;
+        
+        field.parentNode.appendChild(errorElement);
+    }
+    
+    getAuthToken() {
+        // Tentar obter token de diferentes fontes
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'authToken') {
+                return value;
+            }
+        }
+        return null;
     }
 
     showSavingIndicator(status, isError = false) {
@@ -455,7 +608,7 @@ class DashboardController {
         if(status === 'Salvo' || isError) {
              setTimeout(() => {
                 saveIndicator.textContent = '';
-            }, 3000);
+                         }, 3000             );
         }
     }
 
