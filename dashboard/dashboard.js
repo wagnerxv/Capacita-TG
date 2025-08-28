@@ -4,7 +4,6 @@ class DashboardController {
         this.apiUrl = '/api';
         this.currentUser = null;
         this.isEmployer = false;
-        this.saveTimeout = null;
         this.init();
     }
 
@@ -336,15 +335,6 @@ class DashboardController {
         }
 
         if (editProfileForm) {
-            // Auto-save no modal de edição
-             editProfileForm.addEventListener('input', () => {
-                this.showSavingIndicator('Salvando...');
-                clearTimeout(this.saveTimeout);
-                this.saveTimeout = setTimeout(() => {
-                    this.handleProfileUpdate(new Event('submit', { cancelable: true }));
-                }, 1500); // Salva após 1.5s de inatividade
-                         }             );
-
             editProfileForm.addEventListener('submit', (e) => this.handleProfileUpdate(e));
         }
 
