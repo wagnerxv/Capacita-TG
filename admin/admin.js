@@ -828,6 +828,9 @@ class AdminDashboard {
                     <span class="city-badge">${this.escapeHtml(student.cidade)}</span>
                 </td>
                 <td>
+                    <span class="age-info">${student.idade || 'N/A'}</span>
+                </td>
+                <td>
                     ${this.escapeHtml(student.situacao_militar || 'N/A')}
                     ${student.tiro_guerra ? `<br><small>(${this.escapeHtml(student.tiro_guerra)})</small>` : ''}
                 </td>
@@ -912,6 +915,10 @@ class AdminDashboard {
             <div class="detail-row">
                 <div class="detail-label">Email</div>
                 <div class="detail-value">${this.escapeHtml(student.email)}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Idade</div>
+                <div class="detail-value">${this.escapeHtml(student.idade || 'Não informado')}</div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">Telefone</div>
