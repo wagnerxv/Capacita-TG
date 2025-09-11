@@ -592,11 +592,57 @@
                             <div class="form-group">
                                 <label for="loginPassword">Senha</label>
                                 <input type="password" id="loginPassword" required placeholder="Digite sua senha">
+                                <a href="#" id="forgot-password-link" style="text-align: right; font-size: 0.9rem; margin-top: 5px; display: block;">Esqueci minha senha</a>
                             </div>
                             <button type="submit" class="btn btn-primary">Entrar</button>
                         </form>
                         <div class="register-footer">
                             <p>Não tem uma conta? <a href="#" id="toggleLoginLink">Cadastre-se</a></p>
+                        </div>
+                    </div>
+    
+                    <div id="forgotPasswordContent" style="display: none;">
+                        <div class="register-header">
+                            <img src="/src/imgs/logo-arp.png" alt="Logo Capacita TG">
+                            <h2>Recuperar Senha</h2>
+                            <p>Digite seu e-mail para receber um código de recuperação.</p>
+                        </div>
+                        <form class="register-form" id="forgotPasswordForm">
+                            <div class="form-group">
+                                <label for="forgotEmail">E-mail</label>
+                                <input type="email" id="forgotEmail" required placeholder="Digite o e-mail cadastrado">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Enviar Código</button>
+                        </form>
+                        <div class="register-footer">
+                            <p><a href="#" id="backToLoginLink1">Voltar para o Login</a></p>
+                        </div>
+                    </div>
+                    
+                    <div id="resetPasswordContent" style="display: none;">
+                         <div class="register-header">
+                            <img src="/src/imgs/logo-arp.png" alt="Logo Capacita TG">
+                            <h2>Criar Nova Senha</h2>
+                            <p>Digite o código recebido e sua nova senha.</p>
+                        </div>
+                        <form class="register-form" id="resetPasswordForm">
+                            <input type="hidden" id="resetEmail">
+                            <div class="form-group">
+                                <label for="resetCode">Código de 6 dígitos</label>
+                                <input type="text" id="resetCode" required placeholder="Digite o código recebido por e-mail">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">Nova Senha</label>
+                                <input type="password" id="newPassword" required placeholder="Mínimo de 6 caracteres" minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNewPassword">Confirmar Nova Senha</label>
+                                <input type="password" id="confirmNewPassword" required placeholder="Confirme sua nova senha">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Redefinir Senha</button>
+                        </form>
+                        <div class="register-footer">
+                            <p><a href="#" id="backToLoginLink2">Voltar para o Login</a></p>
                         </div>
                     </div>
                 </div>
@@ -706,6 +752,10 @@
                 this.currentCity = null;
                 this.currentUserType = null;
                 this.loginAction = false;
+                this.loginContent = document.getElementById('loginContent');
+                this.registrationContent = document.getElementById('registrationContent');
+                this.forgotPasswordContent = document.getElementById('forgotPasswordContent');
+                this.resetPasswordContent = document.getElementById('resetPasswordContent');
                 this.init();
             }
 
@@ -737,6 +787,75 @@
                 });
             }
 
+            showForm(formToShow) {
+                [this.loginContent, this.registrationContent, this.forgotPasswordContent, this.resetPasswordContent].forEach(form => {
+                    form.style.display = 'none';
+                });
+                formToShow.style.display = 'block';
+            }
+
+            async handleForgotPasswordSubmit(event) {
+                event.preventDefault();
+                const email = document.getElementById('forgotEmail').value;
+                try {
+                    const response = await fetch(`${this.apiUrl}/auth/forgot-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+
+                    document.getElementById('resetEmail').value = email;
+                    const infoMessage = document.getElementById('reset-info-message');
+                    if (infoMessage) {
+                        infoMessage.textContent = data.message;
+                    }
+                    
+                    this.showForm(this.resetPasswordContent);
+
+                } catch (error) {
+                    this.showErrorMessage(error.message || 'Ocorreu um erro.');
+                }
+            }
+
+            async handleResetPasswordSubmit(event) {
+                event.preventDefault();
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+                if (newPassword !== confirmNewPassword) {
+                    return this.showErrorMessage('As novas senhas não coincidem.');
+                }
+
+                const resetData = {
+                    email: document.getElementById('resetEmail').value,
+                    resetCode: document.getElementById('resetCode').value,
+                    newPassword: newPassword
+                };
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/auth/reset-password`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(resetData)
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                    
+                    this.showSuccessModal({
+                        login: true,
+                        message: 'Senha redefinida com sucesso! Você já pode fazer o login.'
+                    });
+                    this.showForm(this.loginContent); // Volta para a tela de login
+
+                } catch (error) {
+                    this.showErrorMessage(error.message || 'Ocorreu um erro ao redefinir a senha.');
+                }
+            }
+
             setupEventListeners() {
                 document.addEventListener('change', this.handleFormChanges.bind(this));
                 document.getElementById('registerForm').addEventListener('submit', this.handleRegistrationSubmit.bind(this));
@@ -744,6 +863,20 @@
                 document.getElementById('loginFormModal').addEventListener('submit', this.handleLoginSubmit.bind(this));
                 document.getElementById('toggleFormLink').addEventListener('click', this.toggleForms.bind(this));
                 document.getElementById('toggleLoginLink').addEventListener('click', this.toggleForms.bind(this));
+                document.getElementById('forgot-password-link').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showForm(this.forgotPasswordContent);
+                });
+                document.getElementById('backToLoginLink1').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showForm(this.loginContent);
+                });
+                document.getElementById('backToLoginLink2').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showForm(this.loginContent);
+                });
+                document.getElementById('forgotPasswordForm').addEventListener('submit', this.handleForgotPasswordSubmit.bind(this));
+                document.getElementById('resetPasswordForm').addEventListener('submit', this.handleResetPasswordSubmit.bind(this));
                 document.getElementById('closeSuccessModal').addEventListener('click', () => {
                     this.hideModal('successModal');
                     if (!this.loginAction) {
