@@ -416,30 +416,51 @@ app.post('/api/auth/reset-password', async (req, res) => {
     }
 
     const user = allUsers[userIndex];
-
-    // 2. Verificar se o código corresponde e não expirou
     const now = new Date();
     const expires = new Date(user.resetCodeExpires);
 
     if (user.resetCode !== resetCode || now > expires) {
-      // Limpa o código para evitar reutilização
       allUsers[userIndex].resetCode = null;
       allUsers[userIndex].resetCodeExpires = null;
       await writeUsers(allUsers);
       return res.status(400).json({ error: 'Código inválido ou expirado.' });
     }
 
-    // 3. Se tudo estiver correto, atualizar a senha
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     allUsers[userIndex].senha = hashedPassword;
-    
-    // Limpa os campos de redefinição
     allUsers[userIndex].resetCode = null;
     allUsers[userIndex].resetCodeExpires = null;
 
     await writeUsers(allUsers);
 
-    res.json({ message: 'Senha redefinida com sucesso!' });
+    // --- NOVA LÓGICA DE LOGIN AUTOMÁTICO ---
+    // 1. Gerar o token de login
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        tipoUsuario: user.tipoUsuario,
+        nome: user.nome
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // 2. Definir o cookie de autenticação
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+    });
+
+    // 3. Retornar os dados do usuário (sem a senha) e o token
+    const { senha: _, ...userWithoutPassword } = user;
+    res.json({
+      message: 'Senha redefinida com sucesso!',
+      user: userWithoutPassword,
+      token
+    });
 
   } catch (error) {
     console.error('Erro na rota reset-password:', error);
