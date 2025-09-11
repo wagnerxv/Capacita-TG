@@ -366,7 +366,7 @@ async function sendPasswordResetEmail(userEmail, resetCode) {
           
           <tr>
             <td align="center" style="background-color: #2c3e50; color: #bdc3c7; padding: 20px 30px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; font-size: 12px;">
-              &copy; 2024-2025 Capacita Arapiraca. Todos os direitos reservados.<br>
+              &copy; 2025-2026 Capacita Arapiraca. Todos os direitos reservados.<br>
               Esta é uma mensagem automática, por favor, não responda.
             </td>
           </tr>
