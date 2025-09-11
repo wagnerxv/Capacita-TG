@@ -328,19 +328,52 @@ async function sendPasswordResetEmail(userEmail, resetCode) {
   let mailOptions = {
     from: `"Capacita Arapiraca" <${process.env.EMAIL_USER}>`,
     to: userEmail,
-    subject: 'Código de Redefinição de Senha',
+    subject: 'Seu Código de Redefinição de Senha - Capacita Arapiraca',
     html: `
-      <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
-        <h2>Redefinição de Senha</h2>
-        <p>Você solicitou a redefinição de sua senha. Use o código abaixo para continuar.</p>
-        <p>Este código é válido por 10 minutos.</p>
-        <div style="background: #f4f4f4; border-radius: 5px; padding: 15px; margin: 20px auto; display: inline-block;">
-          <h3 style="margin: 0; font-size: 24px; letter-spacing: 4px;">${resetCode}</h3>
-        </div>
-        <p>Se você não fez esta solicitação, por favor, ignore este e-mail.</p>
+      <div style="background-color: #f8f9fa; margin: 0; padding: 40px 0; font-family: 'Roboto', Arial, sans-serif;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          
+          <tr>
+            <td align="center" style="padding: 40px 0 30px 0; border-bottom: 1px solid #e0e0e0;">
+              <img src="https://i.imgur.com/ZZMlQG9.png" alt="Logo Capacita Arapiraca" width="100" style="display: block;" />
+              <h1 style="color: #2c3e50; font-family: 'PT Serif', serif; margin: 10px 0 0;">Capacita Arapiraca</h1>
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #2c3e50; font-family: 'PT Serif', serif; text-align: center;">Recuperação de Conta</h2>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+                Olá! Recebemos uma solicitação para redefinir a senha da sua conta.
+              </p>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+                Utilize o código abaixo para criar uma nova senha. Por segurança, este código é válido por apenas <strong>10 minutos</strong>.
+              </p>
+              
+              <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
+                <tr>
+                  <td align="center" style="background-color: #ecf0f1; border-radius: 8px; padding: 15px 25px;">
+                    <span style="font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 5px;">${resetCode}</span>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
+                Se você não fez esta solicitação, pode ignorar este e-mail com segurança. Sua conta continua protegida.
+              </p>
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="center" style="background-color: #2c3e50; color: #bdc3c7; padding: 20px 30px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; font-size: 12px;">
+              &copy; 2024-2025 Capacita Arapiraca. Todos os direitos reservados.<br>
+              Esta é uma mensagem automática, por favor, não responda.
+            </td>
+          </tr>
+        </table>
       </div>
     `,
-  };
+};
 
   try {
     await transporter.sendMail(mailOptions);
