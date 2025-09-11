@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const { kv } = require('@vercel/kv');
 
@@ -310,6 +312,138 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (error) {
     console.error('Error logging in user:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// ===== FUNÇÃO PARA ENVIO DE E-MAIL =====
+async function sendPasswordResetEmail(userEmail, resetCode) {
+  let transporter = nodemailer.createTransport({
+    service: 'gmail', // Usando Gmail como exemplo
+    auth: {
+      user: process.env.EMAIL_USER, // Seu e-mail
+      pass: process.env.EMAIL_PASS, // Sua senha de aplicativo
+    },
+  });
+
+  let mailOptions = {
+    from: `"Capacita Arapiraca" <${process.env.EMAIL_USER}>`,
+    to: userEmail,
+    subject: 'Código de Redefinição de Senha',
+    html: `
+      <div style="font-family: Arial, sans-serif; text-align: center; color: #333;">
+        <h2>Redefinição de Senha</h2>
+        <p>Você solicitou a redefinição de sua senha. Use o código abaixo para continuar.</p>
+        <p>Este código é válido por 10 minutos.</p>
+        <div style="background: #f4f4f4; border-radius: 5px; padding: 15px; margin: 20px auto; display: inline-block;">
+          <h3 style="margin: 0; font-size: 24px; letter-spacing: 4px;">${resetCode}</h3>
+        </div>
+        <p>Se você não fez esta solicitação, por favor, ignore este e-mail.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('E-mail de redefinição enviado para:', userEmail);
+    return true;
+  } catch (error) {
+    console.error('Erro ao enviar e-mail de redefinição:', error);
+    return false;
+  }
+}
+
+
+// ===== ROTA PARA SOLICITAR REDEFINIÇÃO DE SENHA (adicione esta rota) =====
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'O e-mail é obrigatório.' });
+    }
+
+    const allUsers = await readUsers();
+    const userIndex = allUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (userIndex === -1) {
+      // retorna um erro 404 se o e-mail não for encontrado.
+      return res.status(404).json({ error: 'E-mail não cadastrado em nosso sistema.' });
+    }
+
+    // Gera um código seguro de 6 dígitos
+    const resetCode = crypto.randomInt(100000, 999999).toString();
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
+
+    // Armazena o código e a data de expiração no registro do usuário
+    // Em uma aplicação real, você poderia usar um hash do código.
+    allUsers[userIndex].resetCode = resetCode;
+    allUsers[userIndex].resetCodeExpires = expires.toISOString();
+    
+    await writeUsers(allUsers);
+
+    // Envia o e-mail
+    const emailSent = await sendPasswordResetEmail(email, resetCode);
+
+    if (emailSent) {
+      res.json({ message: 'Se um usuário com este e-mail existir, um código de redefinição será enviado.' });
+    } else {
+      res.status(500).json({ error: 'Não foi possível enviar o e-mail de redefinição.' });
+    }
+
+  } catch (error) {
+    console.error('Erro na rota forgot-password:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    // 1. Validação dos dados de entrada
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
+    }
+
+    const allUsers = await readUsers();
+    const userIndex = allUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (userIndex === -1) {
+      return res.status(400).json({ error: 'Código inválido ou expirado.' });
+    }
+
+    const user = allUsers[userIndex];
+
+    // 2. Verificar se o código corresponde e não expirou
+    const now = new Date();
+    const expires = new Date(user.resetCodeExpires);
+
+    if (user.resetCode !== resetCode || now > expires) {
+      // Limpa o código para evitar reutilização
+      allUsers[userIndex].resetCode = null;
+      allUsers[userIndex].resetCodeExpires = null;
+      await writeUsers(allUsers);
+      return res.status(400).json({ error: 'Código inválido ou expirado.' });
+    }
+
+    // 3. Se tudo estiver correto, atualizar a senha
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    allUsers[userIndex].senha = hashedPassword;
+    
+    // Limpa os campos de redefinição
+    allUsers[userIndex].resetCode = null;
+    allUsers[userIndex].resetCodeExpires = null;
+
+    await writeUsers(allUsers);
+
+    res.json({ message: 'Senha redefinida com sucesso!' });
+
+  } catch (error) {
+    console.error('Erro na rota reset-password:', error);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
 
