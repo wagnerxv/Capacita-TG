@@ -1351,3 +1351,7 @@ footer::before {
         font-size: 0.9rem;
     }
 }
+
+#ver-perfil-container:empty {
+    display: none;
+}
