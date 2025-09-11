@@ -170,9 +170,11 @@ class AuthSystem {
     updateUI(isLoggedIn) {
         const headerLoginBtn = document.getElementById('headerLoginBtn');
         const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        const cadastreSeLink = document.getElementById('cadastre-se-link');
+        const verPerfilContainer = document.getElementById('ver-perfil-container');
 
         if (isLoggedIn && this.currentUser) {
-            // Atualizar botão do header desktop
+            // Atualiza os botões principais de login/perfil
             if (headerLoginBtn) {
                 headerLoginBtn.innerHTML = `
                     <div class="user-info-header">
@@ -183,7 +185,6 @@ class AuthSystem {
                 headerLoginBtn.classList.add('logged-in');
             }
 
-            // Atualizar botão mobile
             if (mobileLoginBtn) {
                 mobileLoginBtn.innerHTML = `
                     <div class="user-info-header">
@@ -193,8 +194,20 @@ class AuthSystem {
                 `;
                 mobileLoginBtn.classList.add('logged-in');
             }
+
+            // Oculta "Cadastre-se" e mostra "Ver Perfil"
+            if (cadastreSeLink) {
+                cadastreSeLink.style.display = 'none';
+            }
+            if (verPerfilContainer) {
+                const perfilUrl = this.currentUser.tipoUsuario === 'empregador' 
+                    ? '/dashboard/empregador.html' 
+                    : '/dashboard/candidato.html';
+                verPerfilContainer.innerHTML = `<a href="${perfilUrl}" class="nav-link">Ver Perfil</a>`;
+            }
+
         } else {
-            // Restaurar estado não logado
+            // Restaura o estado de deslogado
             if (headerLoginBtn) {
                 headerLoginBtn.textContent = 'Acessar';
                 headerLoginBtn.classList.remove('logged-in');
@@ -203,6 +216,14 @@ class AuthSystem {
             if (mobileLoginBtn) {
                 mobileLoginBtn.textContent = 'Acessar';
                 mobileLoginBtn.classList.remove('logged-in');
+            }
+
+            // Mostra "Cadastre-se" e limpa "Ver Perfil"
+            if (cadastreSeLink) {
+                cadastreSeLink.style.display = 'list-item';
+            }
+            if (verPerfilContainer) {
+                verPerfilContainer.innerHTML = '';
             }
         }
     }
