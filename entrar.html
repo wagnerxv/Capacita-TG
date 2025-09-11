@@ -807,13 +807,13 @@
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error);
 
-                    // Esconde o form de "esqueci a senha" e mostra o de redefinir
-                    document.getElementById('resetEmail').value = email; // Guarda o email para o próximo passo
+                    document.getElementById('resetEmail').value = email;
+                    const infoMessage = document.getElementById('reset-info-message');
+                    if (infoMessage) {
+                        infoMessage.textContent = data.message;
+                    }
+                    
                     this.showForm(this.resetPasswordContent);
-                    this.showSuccessModal({
-                        login: true, // Apenas para reusar o layout do modal
-                        message: data.message
-                    });
 
                 } catch (error) {
                     this.showErrorMessage(error.message || 'Ocorreu um erro.');
