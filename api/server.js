@@ -318,10 +318,10 @@ app.post('/api/auth/login', async (req, res) => {
 // ===== FUNÇÃO PARA ENVIO DE E-MAIL =====
 async function sendPasswordResetEmail(userEmail, resetCode) {
   let transporter = nodemailer.createTransport({
-    service: 'gmail', // Usando Gmail como exemplo
+    service: 'gmail', 
     auth: {
-      user: process.env.EMAIL_USER, // Seu e-mail
-      pass: process.env.EMAIL_PASS, // Sua senha de aplicativo
+      user: process.env.EMAIL_USER, 
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
@@ -386,7 +386,7 @@ async function sendPasswordResetEmail(userEmail, resetCode) {
 }
 
 
-// ===== ROTA PARA SOLICITAR REDEFINIÇÃO DE SENHA (adicione esta rota) =====
+// ===== ROTA PARA SOLICITAR REDEFINIÇÃO DE SENHA =====
 
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
@@ -466,7 +466,6 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     await writeUsers(allUsers);
 
-    // --- NOVA LÓGICA DE LOGIN AUTOMÁTICO ---
     // 1. Gerar o token de login
     const token = jwt.sign(
       { 
@@ -539,8 +538,6 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
     }
   });
 });
-
-// ===== ROTAS DE CURSOS (mantidas) =====
 
 // GET /api/courses - Pega todos os cursos
 app.get('/api/courses', async (req, res) => {
@@ -700,8 +697,6 @@ app.put('/api/courses/reorder', async (req, res) => {
     res.status(500).json({ error: 'Failed to reorder courses' });
   }
 });
-
-// ===== ROTAS DE ESTUDANTES E EMPRESAS (mantidas) =====
 
 // GET /api/students - Pega todos os alunos/atiradores
 app.get('/api/students', async (req, res) => {
