@@ -805,48 +805,48 @@ class AdminDashboard {
             document.getElementById('studentsTable').style.display = 'none';
             return;
         }
-
+    
         emptyState.style.display = 'none';
         document.getElementById('studentsTable').style.display = 'table';
-
+    
         tbody.innerHTML = this.filteredStudents.map(student => {
             const registrationDate = new Date(student.dataRegistro);
-            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 days
+            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 dias
             const isAtirador = student.situacao_militar === 'matriculado e servindo';
             const rowClass = isAtirador ? 'atirador-row' : '';
-
+    
             return `
             <tr class="${rowClass}">
-                <td>
+                <td data-label="Aluno">
                     <div class="user-info">
                         <div class="user-name">${this.escapeHtml(student.nome)}</div>
                         <div class="user-email">${this.escapeHtml(student.email)}</div>
                         ${isAtirador ? '<span class="atirador-badge">Atirador</span>' : ''}
                     </div>
                 </td>
-                <td>
+                <td data-label="Cidade">
                     <span class="city-badge">${this.escapeHtml(student.cidade)}</span>
                 </td>
-                <td>
+                <td data-label="Idade">
                     <span class="age-info">${student.idade || 'N/A'}</span>
                 </td>
-                <td>
+                <td data-label="Situação Militar">
                     ${this.escapeHtml(student.situacao_militar || 'N/A')}
                     ${student.tiro_guerra ? `<br><small>(${this.escapeHtml(student.tiro_guerra)})</small>` : ''}
                 </td>
-                <td>
+                <td data-label="Cadastro">
                     <div class="date-info">
                         ${registrationDate.toLocaleDateString('pt-BR')}
                         <br>
                         <small>${registrationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
                     </div>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="status-badge ${isRecent ? 'recent' : 'active'}">
                         ${isRecent ? 'Novo' : 'Ativo'}
                     </span>
                 </td>
-                <td>
+                <td data-label="Ações">
                     <div class="action-buttons">
                         <button class="btn btn-primary btn-icon-only" onclick="adminDashboard.viewStudent('${student.id}')" title="Ver Detalhes">
                             👁️
@@ -998,38 +998,38 @@ class AdminDashboard {
             document.getElementById('companiesTable').style.display = 'none';
             return;
         }
-
+    
         emptyState.style.display = 'none';
         document.getElementById('companiesTable').style.display = 'table';
-
+    
         tbody.innerHTML = this.filteredCompanies.map(company => {
             const registrationDate = new Date(company.dataRegistro);
-            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 days
+            const isRecent = (Date.now() - registrationDate.getTime()) < (7 * 24 * 60 * 60 * 1000); // 7 dias
             
             return `
             <tr>
-                <td>
+                <td data-label="Empresa">
                     <div class="company-info">
                         <div class="company-name">${this.escapeHtml(company.nomeEmpresa)}</div>
                         <div class="company-email">${this.escapeHtml(company.email)}</div>
                     </div>
                 </td>
-                <td>
+                <td data-label="Cidade">
                     <span class="city-badge">${this.escapeHtml(company.cidade)}</span>
                 </td>
-                <td>
+                <td data-label="Cadastro">
                     <div class="date-info">
                         ${registrationDate.toLocaleDateString('pt-BR')}
                         <br>
                         <small>${registrationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
                     </div>
                 </td>
-                <td>
+                <td data-label="Status">
                     <span class="status-badge ${isRecent ? 'recent' : 'active'}">
                         ${isRecent ? 'Nova' : 'Ativa'}
                     </span>
                 </td>
-                <td>
+                <td data-label="Ações">
                     <div class="action-buttons">
                         <button class="btn btn-primary btn-icon-only" onclick="adminDashboard.viewCompany('${company.id}')" title="Ver Detalhes">
                             👁️
