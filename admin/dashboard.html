@@ -236,31 +236,33 @@
                         </div>
                     </div>
 
-                    <table class="admin-table" id="studentsTable">
-                        <thead>
-                            <tr>
-                                <th>👤 Aluno</th>
-                                <th>🏙️ Cidade</th>
-                                <th>🔢 Idade</th>
-                                <th>🎖 Situação Militar</th>
-                                <th>📅 Cadastro</th>
-                                <th>⚡ Status</th>
-                                <th>🔧 Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentsTableBody">
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table class="admin-table" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>👤 Aluno</th>
+                                    <th>🏙️ Cidade</th>
+                                    <th>🔢 Idade</th>
+                                    <th>🎖 Situação Militar</th>
+                                    <th>📅 Cadastro</th>
+                                    <th>⚡ Status</th>
+                                    <th>🔧 Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                            </tbody>
+                        </table>
 
-                    <div class="loading-state" id="studentsLoadingState" style="display: none;">
-                        <div class="spinner"></div>
-                        <p>Carregando alunos...</p>
-                    </div>
+                        <div class="loading-state" id="studentsLoadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Carregando alunos...</p>
+                        </div>
 
-                    <div class="empty-state" id="studentsEmptyState" style="display: none;">
-                        <div class="empty-icon">🎓</div>
-                        <h3>Nenhum aluno encontrado</h3>
-                        <p>Os alunos cadastrados aparecerão aqui.</p>
+                        <div class="empty-state" id="studentsEmptyState" style="display: none;">
+                            <div class="empty-icon">🎓</div>
+                            <h3>Nenhum aluno encontrado</h3>
+                            <p>Os alunos cadastrados aparecerão aqui.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -303,30 +305,31 @@
                             <input type="text" id="companySearchInput" placeholder="Buscar empresas..." class="search-input">
                         </div>
                     </div>
+                    <div class="table-wrapper">
+                        <table class="admin-table" id="companiesTable">
+                            <thead>
+                                <tr>
+                                    <th>🏢 Empresa</th>
+                                    <th>🏙️ Cidade</th>
+                                    <th>📅 Cadastro</th>
+                                    <th>⚡ Status</th>
+                                    <th>🔧 Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="companiesTableBody">
+                            </tbody>
+                        </table>
 
-                    <table class="admin-table" id="companiesTable">
-                        <thead>
-                            <tr>
-                                <th>🏢 Empresa</th>
-                                <th>🏙️ Cidade</th>
-                                <th>📅 Cadastro</th>
-                                <th>⚡ Status</th>
-                                <th>🔧 Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="companiesTableBody">
-                        </tbody>
-                    </table>
+                        <div class="loading-state" id="companiesLoadingState" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Carregando empresas...</p>
+                        </div>
 
-                    <div class="loading-state" id="companiesLoadingState" style="display: none;">
-                        <div class="spinner"></div>
-                        <p>Carregando empresas...</p>
-                    </div>
-
-                    <div class="empty-state" id="companiesEmptyState" style="display: none;">
-                        <div class="empty-icon">🏢</div>
-                        <h3>Nenhuma empresa encontrada</h3>
-                        <p>As empresas cadastradas aparecerão aqui.</p>
+                        <div class="empty-state" id="companiesEmptyState" style="display: none;">
+                            <div class="empty-icon">🏢</div>
+                            <h3>Nenhuma empresa encontrada</h3>
+                            <p>As empresas cadastradas aparecerão aqui.</p>
+                        </div>
                     </div>
                 </div>
             </div>
