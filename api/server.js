@@ -413,7 +413,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     
     await writeUsers(allUsers);
 
-    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://capacita-tg.vercel.app' : 'http://127.0.0.1:5500';
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://capacitatg.com.br' : 'http://127.0.0.1:5500';
     const resetLink = `${baseUrl}/entrar.html?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
     const emailSent = await sendPasswordResetEmail(email, resetCode, resetLink);
