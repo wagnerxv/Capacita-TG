@@ -769,12 +769,14 @@
             
             handleUrlParams() {
                 const params = new URLSearchParams(window.location.search);
+                const action = params.get('action');
                 const token = params.get('token');
                 const email = params.get('email');
 
-                if (token && email) {
+                if (action === 'reset' && token && email) {
                     this.showForm(this.resetPasswordContent);
                     
+                    // Preenche os dados vindos do link
                     document.getElementById('resetToken').value = token;
                     document.getElementById('resetEmail').value = email;
 
