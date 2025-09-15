@@ -130,6 +130,11 @@ function generateId() {
   return Date.now().toString() + Math.random().toString(36).substr(2, 9);
 }
 
+// Função auxiliar para criar hash de tokens
+const hashToken = (token) => {
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
 // ===== ROTAS DE AUTENTICAÇÃO =====
 
 // POST /api/auth/register - Registro de usuário
@@ -316,7 +321,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ===== FUNÇÃO PARA ENVIO DE E-MAIL =====
-async function sendPasswordResetEmail(userEmail, resetCode) {
+async function sendPasswordResetEmail(userEmail, resetCode, resetLink) {
   let transporter = nodemailer.createTransport({
     service: 'gmail', 
     auth: {
@@ -328,42 +333,39 @@ async function sendPasswordResetEmail(userEmail, resetCode) {
   let mailOptions = {
     from: `"Capacita Arapiraca" <${process.env.EMAIL_USER}>`,
     to: userEmail,
-    subject: 'Seu Código de Redefinição de Senha - Capacita Arapiraca',
+    subject: 'Redefinição de Senha - Capacita Arapiraca',
     html: `
       <div style="background-color: #f8f9fa; margin: 0; padding: 40px 0; font-family: 'Roboto', Arial, sans-serif;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-          
           <tr>
             <td align="center" style="padding: 40px 0 30px 0; border-bottom: 1px solid #e0e0e0;">
               <img src="https://i.imgur.com/ZZMlQG9.png" alt="Logo Capacita Arapiraca" width="100" style="display: block;" />
               <h1 style="color: #2c3e50; font-family: 'PT Serif', serif; margin: 10px 0 0;">Capacita Arapiraca</h1>
             </td>
           </tr>
-          
           <tr>
             <td style="padding: 40px 30px;">
               <h2 style="color: #2c3e50; font-family: 'PT Serif', serif; text-align: center;">Recuperação de Conta</h2>
-              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
-                Olá! Recebemos uma solicitação para redefinir a senha da sua conta.
-              </p>
-              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
-                Utilize o código abaixo para criar uma nova senha. Por segurança, este código é válido por apenas <strong>10 minutos</strong>.
-              </p>
-              
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Olá! Recebemos uma solicitação para redefinir a senha da sua conta.</p>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Clique no botão abaixo para criar uma nova senha. O link é válido por <strong>10 minutos</strong>.</p>
               <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
+                <tr>
+                  <td align="center" style="background-color: #007BFF; border-radius: 8px;">
+                    <a href="${resetLink}" target="_blank" style="font-size: 16px; font-weight: bold; color: #ffffff; text-decoration: none; display: inline-block; padding: 15px 25px; border-radius: 8px;">Redefinir Senha</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Se preferir, pode usar o código abaixo na página de redefinição de senha:</p>
+              <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 20px auto;">
                 <tr>
                   <td align="center" style="background-color: #ecf0f1; border-radius: 8px; padding: 15px 25px;">
                     <span style="font-size: 32px; font-weight: bold; color: #2c3e50; letter-spacing: 5px;">${resetCode}</span>
                   </td>
                 </tr>
               </table>
-              
-              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">
-                Se você não fez esta solicitação, pode ignorar este e-mail com segurança. Sua conta continua protegida.
-              </p>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Se você não fez esta solicitação, pode ignorar este e-mail.</p>
             </td>
           </tr>
-          
           <tr>
             <td align="center" style="background-color: #2c3e50; color: #bdc3c7; padding: 20px 30px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; font-size: 12px;">
               &copy; 2025-2026 Capacita Arapiraca. Todos os direitos reservados.<br>
@@ -385,9 +387,7 @@ async function sendPasswordResetEmail(userEmail, resetCode) {
   }
 }
 
-
 // ===== ROTA PARA SOLICITAR REDEFINIÇÃO DE SENHA =====
-
 app.post('/api/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -399,26 +399,27 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const userIndex = allUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
 
     if (userIndex === -1) {
-      // retorna um erro 404 se o e-mail não for encontrado.
       return res.status(404).json({ error: 'E-mail não cadastrado em nosso sistema.' });
     }
 
-    // Gera um código seguro de 6 dígitos
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = hashToken(resetToken);
     const resetCode = crypto.randomInt(100000, 999999).toString();
     const expires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
 
-    // Armazena o código e a data de expiração no registro do usuário
-    // Em uma aplicação real, você poderia usar um hash do código.
+    allUsers[userIndex].resetToken = hashedToken;
     allUsers[userIndex].resetCode = resetCode;
     allUsers[userIndex].resetCodeExpires = expires.toISOString();
     
     await writeUsers(allUsers);
 
-    // Envia o e-mail
-    const emailSent = await sendPasswordResetEmail(email, resetCode);
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://capacitatg.com.br' : 'http://127.0.0.1:5500';
+    const resetLink = `${baseUrl}/entrar.html?action=reset&token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    const emailSent = await sendPasswordResetEmail(email, resetCode, resetLink);
 
     if (emailSent) {
-      res.json({ message: 'Se um usuário com este e-mail existir, um código de redefinição será enviado.' });
+      res.json({ message: 'Se um usuário com este e-mail existir, um link de redefinição será enviado.' });
     } else {
       res.status(500).json({ error: 'Não foi possível enviar o e-mail de redefinição.' });
     }
@@ -431,11 +432,10 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
 app.post('/api/auth/reset-password', async (req, res) => {
   try {
-    const { email, resetCode, newPassword } = req.body;
+    const { email, resetCode, newPassword, token } = req.body;
 
-    // 1. Validação dos dados de entrada
-    if (!email || !resetCode || !newPassword) {
-      return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
+    if (!email || !newPassword || (!resetCode && !token)) {
+      return res.status(400).json({ error: 'Dados insuficientes para redefinir a senha.' });
     }
     if (newPassword.length < 6) {
       return res.status(400).json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' });
@@ -445,53 +445,62 @@ app.post('/api/auth/reset-password', async (req, res) => {
     const userIndex = allUsers.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
 
     if (userIndex === -1) {
-      return res.status(400).json({ error: 'Código inválido ou expirado.' });
+      return res.status(400).json({ error: 'Código ou token inválido ou expirado.' });
     }
 
     const user = allUsers[userIndex];
     const now = new Date();
     const expires = new Date(user.resetCodeExpires);
+    
+    let isTokenValid = false;
+    if (token) {
+        const hashedToken = hashToken(token);
+        if (user.resetToken === hashedToken && now <= expires) {
+            isTokenValid = true;
+        }
+    }
 
-    if (user.resetCode !== resetCode || now > expires) {
-      allUsers[userIndex].resetCode = null;
-      allUsers[userIndex].resetCodeExpires = null;
-      await writeUsers(allUsers);
-      return res.status(400).json({ error: 'Código inválido ou expirado.' });
+    let isCodeValid = false;
+    if (resetCode) {
+        if (user.resetCode === resetCode && now <= expires) {
+            isCodeValid = true;
+        }
+    }
+
+    if (!isTokenValid && !isCodeValid) {
+        allUsers[userIndex].resetToken = null;
+        allUsers[userIndex].resetCode = null;
+        allUsers[userIndex].resetCodeExpires = null;
+        await writeUsers(allUsers);
+        return res.status(400).json({ error: 'Código ou token inválido ou expirado.' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     allUsers[userIndex].senha = hashedPassword;
+    allUsers[userIndex].resetToken = null;
     allUsers[userIndex].resetCode = null;
     allUsers[userIndex].resetCodeExpires = null;
 
     await writeUsers(allUsers);
 
-    // 1. Gerar o token de login
-    const token = jwt.sign(
-      { 
-        id: user.id, 
-        email: user.email, 
-        tipoUsuario: user.tipoUsuario,
-        nome: user.nome
-      },
+    const authToken = jwt.sign(
+      { id: user.id, email: user.email, tipoUsuario: user.tipoUsuario, nome: user.nome },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // 2. Definir o cookie de autenticação
-    res.cookie('authToken', token, {
+    res.cookie('authToken', authToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 dias
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
-    // 3. Retornar os dados do usuário (sem a senha) e o token
     const { senha: _, ...userWithoutPassword } = user;
     res.json({
       message: 'Senha redefinida com sucesso!',
       user: userWithoutPassword,
-      token
+      token: authToken
     });
 
   } catch (error) {

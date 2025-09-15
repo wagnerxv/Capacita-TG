@@ -627,7 +627,8 @@
                         </div>
                         <form class="register-form" id="resetPasswordForm">
                             <input type="hidden" id="resetEmail">
-                            <div class="form-group">
+                            <input type="hidden" id="resetToken">
+                            <div class="form-group" id="resetCodeGroup">
                                 <label for="resetCode">Código de 6 dígitos</label>
                                 <input type="text" id="resetCode" required placeholder="Digite o código recebido por e-mail">
                             </div>
@@ -763,6 +764,33 @@
                 this.setupEventListeners();
                 this.populateCitySelects();
                 this.setupConditionalFields();
+                this.handleUrlParams();
+            }
+            
+            handleUrlParams() {
+                const params = new URLSearchParams(window.location.search);
+                const action = params.get('action');
+                const token = params.get('token');
+                const email = params.get('email');
+
+                if (action === 'reset' && token && email) {
+                    this.showForm(this.resetPasswordContent);
+                    
+                    // Preenche os dados vindos do link
+                    document.getElementById('resetToken').value = token;
+                    document.getElementById('resetEmail').value = email;
+
+                    const resetCodeGroup = document.getElementById('resetCodeGroup');
+                    const formSubtitle = this.resetPasswordContent.querySelector('.register-header p');
+                    
+                    if (resetCodeGroup) {
+                        resetCodeGroup.style.display = 'none';
+                        resetCodeGroup.querySelector('input').removeAttribute('required');
+                    }
+                    if (formSubtitle) {
+                        formSubtitle.textContent = 'Link de redefinição verificado. Crie sua nova senha.';
+                    }
+                }
             }
 
             populateCitySelects() {
@@ -831,8 +859,9 @@
 
                 const resetData = {
                     email: document.getElementById('resetEmail').value,
+                    newPassword: newPassword,
                     resetCode: document.getElementById('resetCode').value,
-                    newPassword: newPassword
+                    token: document.getElementById('resetToken').value
                 };
 
                 try {
@@ -847,9 +876,12 @@
                     
                     this.showSuccessModal({
                         login: true,
-                        message: 'Senha redefinida com sucesso! Você já pode fazer o login.'
+                        message: 'Senha redefinida com sucesso! Você foi conectado automaticamente.'
                     });
-                    this.showForm(this.loginContent); // Volta para a tela de login
+
+                    setTimeout(() => {
+                        window.location.href = '/index.html';
+                    }, 2000);
 
                 } catch (error) {
                     this.showErrorMessage(error.message || 'Ocorreu um erro ao redefinir a senha.');
@@ -1340,6 +1372,5 @@
             new CapacitaTGManager();
         });
     </script>
-    <script src="/src/js/cookie-consent.js"></script>
 </body>
 </html>
