@@ -405,7 +405,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = hashToken(resetToken);
     const resetCode = crypto.randomInt(100000, 999999).toString();
-    const expires = new Date(Date.now() + 10 * 60 * 1000); // Expira em 10 minutos
+    const expires = new Date(Date.now() + 5 * 60 * 1000); // Expira em 5 minutos
 
     allUsers[userIndex].resetToken = hashedToken;
     allUsers[userIndex].resetCode = resetCode;
