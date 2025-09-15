@@ -347,7 +347,7 @@ async function sendPasswordResetEmail(userEmail, resetCode, resetLink) {
             <td style="padding: 40px 30px;">
               <h2 style="color: #2c3e50; font-family: 'PT Serif', serif; text-align: center;">Recuperação de Conta</h2>
               <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Olá! Recebemos uma solicitação para redefinir a senha da sua conta.</p>
-              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Clique no botão abaixo para criar uma nova senha. O link é válido por <strong>10 minutos</strong>.</p>
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center;">Clique no botão abaixo para criar uma nova senha. O link é válido por <strong>5 minutos</strong>.</p>
               <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
                 <tr>
                   <td align="center" style="background-color: #007BFF; border-radius: 8px;">
