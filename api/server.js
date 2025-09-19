@@ -26,7 +26,7 @@ async function createDefaultAdmin() {
     const adminUser = users.find(user => user.tipoUsuario === 'admin');
 
     if (!adminUser) {
-        const hashedPassword = await bcrypt.hash('capacita2025', 12); // A senha padrão é 'capacita2025'
+        const hashedPassword = await bcrypt.hash('capacita2025', 12);
         const newAdmin = {
             id: generateId(),
             nome: 'Administrador',
