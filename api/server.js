@@ -20,6 +20,32 @@ app.use(cookieParser());
 // JWT Secret (em produção, usar variável de ambiente)
 const JWT_SECRET = process.env.JWT_SECRET || 'capacita_arapiraca_secret_2025';
 
+// Função para criar o usuário administrador padrão
+async function createDefaultAdmin() {
+    const users = await readUsers();
+    const adminUser = users.find(user => user.tipoUsuario === 'admin');
+
+    if (!adminUser) {
+        const hashedPassword = await bcrypt.hash('capacita2025', 12); // A senha padrão é 'capacita2025'
+        const newAdmin = {
+            id: generateId(),
+            nome: 'Administrador',
+            email: 'admin@capacitatg.com.br',
+            senha: hashedPassword,
+            tipoUsuario: 'admin',
+            dataRegistro: new Date().toISOString(),
+            ativo: true,
+        };
+        users.push(newAdmin);
+        await writeUsers(users);
+        console.log('Usuário administrador padrão criado.');
+    }
+}
+
+// Chama a função para garantir que o administrador exista ao iniciar o servidor
+createDefaultAdmin();
+
+
 // Middleware de autenticação
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.authToken || req.headers.authorization?.split(' ')[1];
@@ -136,6 +162,37 @@ const hashToken = (token) => {
 };
 
 // ===== ROTAS DE AUTENTICAÇÃO =====
+
+// POST /api/auth/admin/login - Login do administrador
+app.post('/api/auth/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
+        }
+
+        const users = await readUsers();
+        const adminUser = users.find(user => user.tipoUsuario === 'admin');
+
+        if (!adminUser || username !== 'admin') {
+            return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, adminUser.senha);
+
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Usuário ou senha incorretos' });
+        }
+
+        res.json({ message: 'Login de administrador bem-sucedido' });
+
+    } catch (error) {
+        console.error('Erro no login do administrador:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
 
 // POST /api/auth/register - Registro de usuário
 app.post('/api/auth/register', async (req, res) => {

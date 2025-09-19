@@ -44,7 +44,6 @@
         </div>
     </div>
 
-    <!-- Modal Erro -->
     <div class="modal-overlay" id="errorModal">
         <div class="modal">
             <div class="modal-header error">
@@ -62,6 +61,7 @@
     <script>
         class AdminLogin {
             constructor() {
+                this.apiUrl = '/api';
                 this.form = document.getElementById('loginForm');
                 this.errorModal = document.getElementById('errorModal');
                 this.init();
@@ -73,7 +73,6 @@
                     this.hideModal('errorModal');
                 });
 
-                
                 if (this.isLoggedIn()) {
                     window.location.href = 'dashboard.html';
                 }
@@ -87,20 +86,31 @@
                 
                 this.showLoading(true);
 
-                // Simular delay para autenticação
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                try {
+                    const response = await fetch(`${this.apiUrl}/auth/admin/login`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ username, password }),
+                    });
 
-                // Autenticação simples
-                if (username === 'admin' && password === 'capacita2025') {
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Erro de autenticação');
+                    }
                     
                     localStorage.setItem('adminLoggedIn', 'true');
                     localStorage.setItem('adminLoginTime', Date.now().toString());
                     
                     // Redirecionar para o dashboard
                     window.location.href = 'dashboard.html';
-                } else {
+
+                } catch (error) {
+                    this.showError(error.message);
+                } finally {
                     this.showLoading(false);
-                    this.showError('Usuário ou senha incorretos. Tente novamente.');
                 }
             }
 
