@@ -95,6 +95,11 @@ class CourseLoader {
     
     // Add animation to cards
     this.animateCourseCards();
+    
+    // Proteger links externos após criar os cards
+    if (window.authSystem && typeof window.authSystem.protectExternalLinks === 'function') {
+        window.authSystem.protectExternalLinks();
+    }
     }
     
     createCourseCard(course) {
