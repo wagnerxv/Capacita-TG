@@ -80,6 +80,16 @@
       "imageUrl": "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg",
       "courseUrl": "https://moodle.ifrs.edu.br/course/index.php?categoryid=151",
       "page": "novoemp.html"
+    },
+    {
+      "id": "10",
+      "title": "Curso de Teste - Marketing Digital",
+      "category": "Teste - 20 horas",
+      "description": "Curso de teste para verificar a proteção de links externos. Este é um curso fictício para testar a funcionalidade de autenticação.",
+      "imageUrl": "https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg",
+      "courseUrl": "https://example.com/curso-marketing-digital",
+      "buttonText": "Inscreva-se",
+      "page": "empreend.html"
     }
   ]
 }
