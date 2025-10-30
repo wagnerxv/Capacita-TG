@@ -1,0 +1,41 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Prefer local Redis by default
+      REDIS_URL: redis://redis:6379
+      #JWT_SECRET: "change-this-secret"
+      # EMAIL_USER: ""
+      # EMAIL_PASS: ""
+      # If using Upstash/Vercel KV instead, comment REDIS_URL and set these:
+      # KV_REST_API_URL: ""
+      # KV_REST_API_TOKEN: ""
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+

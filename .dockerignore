@@ -1,0 +1,8 @@
+node_modules
+.git
+npm-debug.log
+**/.DS_Store
+**/node_modules
+**/npm-debug.log
+**/.vscode
+**/.idea

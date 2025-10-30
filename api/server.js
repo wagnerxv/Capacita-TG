@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
-const { kv } = require('@vercel/kv');
+const { getJSON, setJSON } = require('./storage');
 
 const app = express();
 
@@ -63,90 +63,75 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-// Função para ler os cursos do Vercel KV
+// Funções de leitura/gravação usando adaptador de storage (Vercel KV ou Redis)
 async function readCourses() {
   try {
-    const courses = await kv.get('courses');
-    return courses || [];
+    return (await getJSON('courses')) || [];
   } catch (error) {
-    console.error('Error reading courses from Vercel KV:', error);
+    console.error('Error reading courses:', error);
     return [];
   }
 }
 
-// Função para escrever os cursos no Vercel KV
 async function writeCourses(coursesData) {
   try {
-    await kv.set('courses', coursesData);
-    return true;
+    return await setJSON('courses', coursesData);
   } catch (error) {
-    console.error('Error writing courses to Vercel KV:', error);
+    console.error('Error writing courses:', error);
     return false;
   }
 }
 
-// Função para ler os usuários do Vercel KV
 async function readUsers() {
   try {
-    const users = await kv.get('users');
-    return users || [];
+    return (await getJSON('users')) || [];
   } catch (error) {
-    console.error('Error reading users from Vercel KV:', error);
+    console.error('Error reading users:', error);
     return [];
   }
 }
 
-// Função para escrever os usuários no Vercel KV
 async function writeUsers(usersData) {
   try {
-    await kv.set('users', usersData);
-    return true;
+    return await setJSON('users', usersData);
   } catch (error) {
-    console.error('Error writing users to Vercel KV:', error);
+    console.error('Error writing users:', error);
     return false;
   }
 }
 
-// Função para ler os alunos/atiradores do Vercel KV
 async function readStudents() {
   try {
-    const students = await kv.get('students');
-    return students || [];
+    return (await getJSON('students')) || [];
   } catch (error) {
-    console.error('Error reading students from Vercel KV:', error);
+    console.error('Error reading students:', error);
     return [];
   }
 }
 
-// Função para escrever os alunos/atiradores no Vercel KV
 async function writeStudents(studentsData) {
   try {
-    await kv.set('students', studentsData);
-    return true;
+    return await setJSON('students', studentsData);
   } catch (error) {
-    console.error('Error writing students to Vercel KV:', error);
+    console.error('Error writing students:', error);
     return false;
   }
 }
 
-// Função para ler as empresas do Vercel KV
 async function readCompanies() {
   try {
-    const companies = await kv.get('companies');
-    return companies || [];
+    return (await getJSON('companies')) || [];
   } catch (error) {
-    console.error('Error reading companies from Vercel KV:', error);
+    console.error('Error reading companies:', error);
     return [];
   }
 }
 
-// Função para escrever as empresas no Vercel KV
 async function writeCompanies(companiesData) {
   try {
-    await kv.set('companies', companiesData);
-    return true;
+    return await setJSON('companies', companiesData);
   } catch (error) {
-    console.error('Error writing companies to Vercel KV:', error);
+    console.error('Error writing companies:', error);
     return false;
   }
 }
@@ -1043,5 +1028,5 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Exporta o app para a Vercel
+// Exporta o app
 module.exports = app;
