@@ -107,6 +107,9 @@ class AdminDashboard {
                 }
             });
         });
+
+        // Import form
+        document.getElementById('importForm')?.addEventListener('submit', this.handleImportSubmit.bind(this));
     }
 
     handleButtonTextChange() {
@@ -1102,6 +1105,169 @@ class AdminDashboard {
             </div>
         `;
         this.showModal('companyModal');
+    }
+
+    async handleImportSubmit(e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('importFile');
+        const passwordInput = document.getElementById('importPassword');
+        const importBtn = document.getElementById('importBtn');
+        const resultsDiv = document.getElementById('importResults');
+        const resultsContent = document.getElementById('importResultsContent');
+
+        if (!fileInput.files[0]) {
+            this.showToast('Por favor, selecione um arquivo JSON', 'error');
+            return;
+        }
+
+        if (!passwordInput.value) {
+            this.showToast('Por favor, digite uma senha para os usuários', 'error');
+            return;
+        }
+
+        try {
+            // Mostrar loading
+            this.showButtonLoading('importBtn', true);
+            resultsDiv.style.display = 'none';
+
+            // Ler o arquivo JSON
+            const fileContent = await this.readFileAsText(fileInput.files[0]);
+            const jsonData = JSON.parse(fileContent);
+
+            // Enviar para o servidor
+            const response = await fetch(`${this.apiUrl}/admin/import`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: jsonData,
+                    password: passwordInput.value
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Erro ao importar dados');
+            }
+
+            const result = await response.json();
+
+            // Mostrar resultados
+            this.displayImportResults(result.results);
+            resultsDiv.style.display = 'block';
+
+            // Recarregar dados
+            await this.loadCourses();
+            await this.loadStudents();
+            await this.loadCompanies();
+
+            this.showToast('Importação concluída com sucesso!');
+
+            // Limpar formulário
+            document.getElementById('importForm').reset();
+
+        } catch (error) {
+            console.error('Error importing data:', error);
+            this.showToast(error.message || 'Erro ao importar dados', 'error');
+        } finally {
+            this.showButtonLoading('importBtn', false);
+        }
+    }
+
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Erro ao ler arquivo'));
+            reader.readAsText(file);
+        });
+    }
+
+    displayImportResults(results) {
+        const resultsContent = document.getElementById('importResultsContent');
+
+        let html = '<div class="import-results-grid">';
+
+        // Students
+        if (results.students.success > 0 || results.students.failed > 0) {
+            html += `
+                <div class="result-card ${results.students.failed > 0 ? 'has-errors' : 'success'}">
+                    <h4>Alunos</h4>
+                    <p class="result-success">Importados com sucesso: ${results.students.success}</p>
+                    ${results.students.failed > 0 ? `<p class="result-error">Falhas: ${results.students.failed}</p>` : ''}
+                    ${results.students.errors.length > 0 ? `
+                        <details>
+                            <summary>Ver erros</summary>
+                            <ul class="error-list">
+                                ${results.students.errors.map(err => `<li>${this.escapeHtml(err)}</li>`).join('')}
+                            </ul>
+                        </details>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Users
+        if (results.users.success > 0 || results.users.failed > 0) {
+            html += `
+                <div class="result-card ${results.users.failed > 0 ? 'has-errors' : 'success'}">
+                    <h4>Usuários</h4>
+                    <p class="result-success">Importados com sucesso: ${results.users.success}</p>
+                    ${results.users.failed > 0 ? `<p class="result-error">Falhas: ${results.users.failed}</p>` : ''}
+                    ${results.users.errors.length > 0 ? `
+                        <details>
+                            <summary>Ver erros</summary>
+                            <ul class="error-list">
+                                ${results.users.errors.map(err => `<li>${this.escapeHtml(err)}</li>`).join('')}
+                            </ul>
+                        </details>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Courses
+        if (results.courses.success > 0 || results.courses.failed > 0) {
+            html += `
+                <div class="result-card ${results.courses.failed > 0 ? 'has-errors' : 'success'}">
+                    <h4>Cursos</h4>
+                    <p class="result-success">Importados com sucesso: ${results.courses.success}</p>
+                    ${results.courses.failed > 0 ? `<p class="result-error">Falhas: ${results.courses.failed}</p>` : ''}
+                    ${results.courses.errors.length > 0 ? `
+                        <details>
+                            <summary>Ver erros</summary>
+                            <ul class="error-list">
+                                ${results.courses.errors.map(err => `<li>${this.escapeHtml(err)}</li>`).join('')}
+                            </ul>
+                        </details>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        // Companies
+        if (results.companies.success > 0 || results.companies.failed > 0) {
+            html += `
+                <div class="result-card ${results.companies.failed > 0 ? 'has-errors' : 'success'}">
+                    <h4>Empresas</h4>
+                    <p class="result-success">Importados com sucesso: ${results.companies.success}</p>
+                    ${results.companies.failed > 0 ? `<p class="result-error">Falhas: ${results.companies.failed}</p>` : ''}
+                    ${results.companies.errors.length > 0 ? `
+                        <details>
+                            <summary>Ver erros</summary>
+                            <ul class="error-list">
+                                ${results.companies.errors.map(err => `<li>${this.escapeHtml(err)}</li>`).join('')}
+                            </ul>
+                        </details>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        resultsContent.innerHTML = html;
     }
 }
 

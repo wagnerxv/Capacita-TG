@@ -1017,6 +1017,221 @@ function validateUserUpdateData(data, userType) {
   return null; // Sem erros
 }
 
+// POST /api/admin/import - Importação em massa de dados (apenas admin)
+app.post('/api/admin/import', async (req, res) => {
+  try {
+    const { data, password } = req.body;
+
+    if (!data || !password) {
+      return res.status(400).json({ error: 'Dados e senha são obrigatórios' });
+    }
+
+    // Validação básica da estrutura dos dados
+    if (!data.students && !data.users && !data.courses && !data.companies) {
+      return res.status(400).json({ error: 'Nenhum dado válido para importar' });
+    }
+
+    const results = {
+      students: { success: 0, failed: 0, errors: [] },
+      users: { success: 0, failed: 0, errors: [] },
+      courses: { success: 0, failed: 0, errors: [] },
+      companies: { success: 0, failed: 0, errors: [] }
+    };
+
+    // Importar Students
+    if (data.students && Array.isArray(data.students)) {
+      const allStudents = await readStudents();
+
+      for (const studentData of data.students) {
+        try {
+          // Verificar se já existe
+          const exists = allStudents.find(s => s.email === studentData.email);
+          if (exists) {
+            results.students.failed++;
+            results.students.errors.push(`Email ${studentData.email} já existe`);
+            continue;
+          }
+
+          const newStudent = {
+            id: generateId(),
+            nome: studentData.nome,
+            cidade: studentData.cidade,
+            email: studentData.email,
+            telefone: studentData.telefone || '',
+            idade: studentData.idade || null,
+            escolaridade: studentData.escolaridade || '',
+            habilidades: studentData.habilidades || '',
+            experiencia: studentData.experiencia || '',
+            formacao: studentData.formacao || '',
+            sexo: studentData.sexo || null,
+            situacao_militar: studentData.situacao_militar || null,
+            tiro_guerra: studentData.tiro_guerra || null,
+            tipo: 'atirador',
+            dataRegistro: new Date().toISOString()
+          };
+
+          allStudents.push(newStudent);
+          results.students.success++;
+        } catch (error) {
+          results.students.failed++;
+          results.students.errors.push(`Erro ao processar ${studentData.email}: ${error.message}`);
+        }
+      }
+
+      await writeStudents(allStudents);
+    }
+
+    // Importar Users
+    if (data.users && Array.isArray(data.users)) {
+      const allUsers = await readUsers();
+
+      for (const userData of data.users) {
+        try {
+          // Verificar se já existe
+          const exists = allUsers.find(u => u.email.toLowerCase() === userData.email.toLowerCase());
+          if (exists) {
+            results.users.failed++;
+            results.users.errors.push(`Email ${userData.email} já existe`);
+            continue;
+          }
+
+          // Hash da senha fornecida pelo usuário
+          const hashedPassword = await bcrypt.hash(password, 12);
+
+          const newUser = {
+            id: generateId(),
+            nome: userData.nome,
+            email: userData.email.toLowerCase(),
+            senha: hashedPassword,
+            tipoUsuario: userData.tipoUsuario || 'atirador',
+            sexo: userData.sexo || null,
+            situacao_militar: userData.situacao_militar || null,
+            tiro_guerra: userData.tiro_guerra || null,
+            telefone: userData.telefone || '',
+            cidade: userData.cidade || '',
+            idade: userData.idade || null,
+            escolaridade: userData.escolaridade || '',
+            habilidades: userData.habilidades || '',
+            experiencia: userData.experiencia || '',
+            formacao: userData.formacao || '',
+            dataRegistro: new Date().toISOString(),
+            ativo: true
+          };
+
+          allUsers.push(newUser);
+          results.users.success++;
+
+          // Também adicionar em students se for atirador
+          if (newUser.tipoUsuario === 'atirador') {
+            const students = await readStudents();
+            const studentData = {
+              id: newUser.id,
+              nome: newUser.nome,
+              cidade: newUser.cidade,
+              email: newUser.email,
+              telefone: newUser.telefone,
+              idade: newUser.idade,
+              escolaridade: newUser.escolaridade,
+              habilidades: newUser.habilidades,
+              experiencia: newUser.experiencia,
+              formacao: newUser.formacao,
+              sexo: newUser.sexo,
+              situacao_militar: newUser.situacao_militar,
+              tiro_guerra: newUser.tiro_guerra,
+              tipo: 'atirador',
+              dataRegistro: newUser.dataRegistro
+            };
+            students.push(studentData);
+            await writeStudents(students);
+          }
+        } catch (error) {
+          results.users.failed++;
+          results.users.errors.push(`Erro ao processar ${userData.email}: ${error.message}`);
+        }
+      }
+
+      await writeUsers(allUsers);
+    }
+
+    // Importar Courses
+    if (data.courses && Array.isArray(data.courses)) {
+      const allCourses = await readCourses();
+
+      for (const courseData of data.courses) {
+        try {
+          const newCourse = {
+            id: generateId(),
+            title: courseData.title,
+            category: courseData.category,
+            description: courseData.description,
+            imageUrl: courseData.imageUrl,
+            courseUrl: courseData.courseUrl,
+            page: courseData.page,
+            downloadUrl: courseData.downloadUrl || null,
+            buttonText: courseData.buttonText || 'Inscreva-se',
+            createdAt: new Date().toISOString()
+          };
+
+          allCourses.push(newCourse);
+          results.courses.success++;
+        } catch (error) {
+          results.courses.failed++;
+          results.courses.errors.push(`Erro ao processar curso ${courseData.title}: ${error.message}`);
+        }
+      }
+
+      await writeCourses(allCourses);
+    }
+
+    // Importar Companies
+    if (data.companies && Array.isArray(data.companies)) {
+      const allCompanies = await readCompanies();
+
+      for (const companyData of data.companies) {
+        try {
+          // Verificar se já existe
+          const exists = allCompanies.find(c => c.email === companyData.email);
+          if (exists) {
+            results.companies.failed++;
+            results.companies.errors.push(`Email ${companyData.email} já existe`);
+            continue;
+          }
+
+          const newCompany = {
+            id: generateId(),
+            nomeEmpresa: companyData.nomeEmpresa,
+            cnpj: companyData.cnpj || '',
+            cidade: companyData.cidade,
+            telefone: companyData.telefone || '',
+            email: companyData.email,
+            setor: companyData.setor || '',
+            informacoes: companyData.informacoes || '',
+            tipo: 'empresa',
+            dataRegistro: new Date().toISOString()
+          };
+
+          allCompanies.push(newCompany);
+          results.companies.success++;
+        } catch (error) {
+          results.companies.failed++;
+          results.companies.errors.push(`Erro ao processar ${companyData.email}: ${error.message}`);
+        }
+      }
+
+      await writeCompanies(allCompanies);
+    }
+
+    res.json({
+      message: 'Importação concluída',
+      results
+    });
+
+  } catch (error) {
+    console.error('Error importing data:', error);
+    res.status(500).json({ error: 'Erro ao importar dados' });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });

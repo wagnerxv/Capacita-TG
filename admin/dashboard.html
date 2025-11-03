@@ -43,6 +43,10 @@
                     <span class="nav-icon">🏢</span>
                     Empresas
                 </button>
+                <button class="nav-tab" data-section="import">
+                    <span class="nav-icon">📥</span>
+                    Importar Dados
+                </button>
             </div>
         </div>
     </nav>
@@ -329,6 +333,94 @@
                             <div class="empty-icon">🏢</div>
                             <h3>Nenhuma empresa encontrada</h3>
                             <p>As empresas cadastradas aparecerão aqui.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="importSection">
+                <div class="dashboard-header">
+                    <h2>Importação em Massa de Dados</h2>
+                </div>
+
+                <div class="import-container">
+                    <div class="import-instructions">
+                        <h3>Como usar</h3>
+                        <p>Faça upload de um arquivo JSON contendo os dados que deseja importar. O arquivo pode conter:</p>
+                        <ul>
+                            <li><strong>students:</strong> Array de alunos/atiradores</li>
+                            <li><strong>users:</strong> Array de usuários (com senha customizável)</li>
+                            <li><strong>courses:</strong> Array de cursos</li>
+                            <li><strong>companies:</strong> Array de empresas</li>
+                        </ul>
+                        <p><strong>Importante:</strong> Para importar usuários, você precisará digitar uma senha que será aplicada a todos os usuários importados.</p>
+
+                        <div class="example-json">
+                            <h4>Exemplo de formato JSON:</h4>
+                            <pre>{
+  "users": [
+    {
+      "nome": "João Silva",
+      "email": "joao@example.com",
+      "tipoUsuario": "atirador",
+      "cidade": "Arapiraca",
+      "telefone": "(82) 99999-9999",
+      "idade": 20
+    }
+  ],
+  "students": [
+    {
+      "nome": "Maria Santos",
+      "email": "maria@example.com",
+      "cidade": "Arapiraca",
+      "telefone": "(82) 98888-8888",
+      "idade": 19,
+      "escolaridade": "Ensino Médio",
+      "habilidades": "Informática"
+    }
+  ],
+  "courses": [
+    {
+      "title": "Curso de Exemplo",
+      "category": "Categoria",
+      "description": "Descrição do curso",
+      "imageUrl": "https://example.com/image.jpg",
+      "courseUrl": "https://example.com/curso",
+      "page": "empreend.html"
+    }
+  ]
+}</pre>
+                        </div>
+                    </div>
+
+                    <div class="import-form-container">
+                        <form id="importForm" class="import-form">
+                            <div class="form-group">
+                                <label for="importFile">Arquivo JSON *</label>
+                                <input type="file" id="importFile" name="importFile" accept=".json" required>
+                                <small>Selecione um arquivo JSON com os dados a importar</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="importPassword">Senha para Usuários *</label>
+                                <input type="password" id="importPassword" name="importPassword" required placeholder="Digite a senha para os usuários">
+                                <small>Esta senha será aplicada a todos os usuários importados do JSON</small>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="importBtn">
+                                    <span class="btn-text">Importar Dados</span>
+                                    <span class="btn-loading" style="display: none;">
+                                        <span class="spinner"></span>
+                                        Importando...
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="import-results" id="importResults" style="display: none;">
+                            <h3>Resultados da Importação</h3>
+                            <div id="importResultsContent"></div>
                         </div>
                     </div>
                 </div>
